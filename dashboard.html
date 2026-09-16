@@ -2,134 +2,175 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel - Respostas</title>
+    <title>Painel - Ao Mosso</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
             text-align: center; 
             margin: 0;
-            padding-top: 120px; 
-            background-color: #0d0e12; 
+            padding-top: 50px; 
+            background-color: #121214; 
             color: #fff;
             min-height: 100vh;
-            overflow: hidden;
+            transition: background 0.5s ease;
         }
-        h1 { 
-            font-size: 2rem; 
-            color: #4f5666; 
-            letter-spacing: 3px;
-            text-transform: uppercase;
+        
+        .placar-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
         }
-        #resposta-container {
-            display: inline-block;
-            margin-top: 60px;
+        .placar-box {
+            background: #202024;
+            padding: 15px 30px;
+            border-radius: 12px;
+            border: 1px solid #323238;
         }
+        .placar-box h3 { margin: 0 0 5px 0; color: #8d8d99; font-size: 0.9rem; text-transform: uppercase;}
+        .placar-box span { font-size: 2rem; font-weight: bold; }
+        #qtd-sim { color: #2ecc71; }
+        #qtd-nao { color: #e74c3c; }
+
+        h1 { font-size: 1.8rem; color: #8d8d99; letter-spacing: 2px; }
+        
+        #conteudo-dinamico {
+            margin-top: 30px;
+            min-height: 300px;
+        }
+        
         #resposta-atual { 
-            font-size: 8rem; 
+            font-size: 6rem; 
             font-weight: 900; 
-            letter-spacing: 4px;
-            transition: all 0.3s ease;
+            margin: 20px 0;
             text-transform: uppercase;
         }
         
-        /* Efeitos de Neon e Animação de Entrada */
-        .SIM { 
-            color: #2ecc71; 
-            text-shadow: 0 0 30px rgba(46, 204, 113, 0.8), 0 0 60px rgba(46, 204, 113, 0.4);
-            animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .meme-texto {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 10px;
         }
-        .NAO { 
-            color: #e74c3c; 
-            text-shadow: 0 0 30px rgba(231, 76, 60, 0.8), 0 0 60px rgba(231, 76, 60, 0.4);
-            animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
+
+        .fundo-sim { background-color: #064e3b !important; }
+        .fundo-nao { background-color: #7f1d1d !important; }
+        .fundo-hora { background-color: #7c2d12 !important; }
+
+        .animacao-impacto { animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
         #aviso-som {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255,255,255,0.1);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: #888;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; color: #888;
         }
 
         @keyframes impacto {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.1); }
+            0% { transform: scale(0.5); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <h1>Painel de Almoço Ao Vivo</h1>
-    <div id="resposta-container">
+    <div class="placar-container">
+        <div class="placar-box">
+            <h3>Ao Mossar Liberado 👍</h3>
+            <span id="qtd-sim">0</span>
+        </div>
+        <div class="placar-box">
+            <h3>Ao Mosso Negado 👎</h3>
+            <span id="qtd-nao">0</span>
+        </div>
+    </div>
+
+    <h1>Painel do Ao Mosso Ao Vivo</h1>
+    
+    <div id="conteudo-dinamico">
         <div id="resposta-atual">Aguardando...</div>
+        <div id="meme-espaco" class="meme-texto"></div>
     </div>
     
-    <div id="aviso-som">🔊 Clique em qualquer lugar da tela uma vez para ativar o som</div>
+    <div id="aviso-som">🔊 Clique na tela uma vez para ativar os sons de alerta</div>
 
     <script>
         const socket = io();
+        let contSim = 0;
+        let contNao = 0;
         
-        // Criando o sintetizador de som do próprio navegador (assim não precisamos de arquivos externos de áudio)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        function tocarSomNotificacao(tipo) {
+        function tocarSom(tipo) {
             try {
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
                 
-                // Configura um som agudo e alegre para o SIM, e um mais grave/alerta para o NÃO
                 if (tipo === 'SIM') {
-                    oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota Ré5
-                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);  // Nota Lá5
+                    oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.4);
+                } else if (tipo === 'NAO') {
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    oscillator.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.35);
+                } else {
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.15);
                     gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.3);
-                } else {
-                    oscillator.type = 'sawtooth';
-                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
-                    oscillator.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.2);
-                    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.25);
+                    oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3);
                 }
-            } catch (e) {
-                console.log("Áudio bloqueado pelo navegador. Clique na tela para desbloquear.");
-            }
+            } catch (e) {}
         }
 
-        socket.on('nova-resposta', (resposta) => {
-            const div = document.getElementById('resposta-atual');
+        socket.on('nova-resposta', (data) => {
+            const txtResposta = document.getElementById('resposta-atual');
+            const txtMeme = document.getElementById('meme-espaco');
+            const divDinamica = document.getElementById('conteudo-dinamico');
             
-            // Remove a classe antiga para reiniciar a animação de impacto
-            div.className = '';
-            
-            // Força o navegador a resetar a animação
-            void div.offsetWidth; 
-            
-            // Atualiza o texto e aplica as novas animações/cores
-            div.innerText = resposta;
-            div.className = resposta;
-            
-            // Ativa o som
-            tocarSomNotificacao(resposta);
+            document.body.className = '';
+            divDinamica.className = '';
+            void divDinamica.offsetWidth;
+            divDinamica.classList.add('animacao-impacto');
+
+            if (data === 'SIM') {
+                contSim++;
+                document.getElementById('qtd-sim').innerText = contSim;
+                document.body.classList.add('fundo-sim');
+                txtResposta.innerText = "SÓ VAI! 🎉";
+                txtResposta.style.color = "#2ecc71";
+                txtMeme.innerText = "LARGUE TUDO E VÁ AO MOSSAR! 🏃‍♂️💨🍔";
+                tocarSom('SIM');
+            } 
+            else if (data === 'NAO') {
+                contNao++;
+                document.getElementById('qtd-nao').innerText = contNao;
+                document.body.classList.add('fundo-nao');
+                txtResposta.innerText = "NÃO PODE... ❌";
+                txtResposta.style.color = "#e74c3c";
+                txtMeme.innerText = "Fique na cadeira. Fome de ao mossar cancelada temporariamente. 🥲💻";
+                tocarSom('NAO');
+            } 
+            else if (data.startsWith('HORARIO:')) {
+                const horaSugerida = data.replace('HORARIO:', '');
+                document.body.classList.add('fundo-hora');
+                txtResposta.innerText = horaSugerida + " ⏰";
+                txtResposta.style.color = "#ff9f43";
+                txtMeme.innerText = "Agendaram o compromisso oficial do ao mosso!";
+                tocarSom('HORA');
+            }
         });
 
-        // Desbloqueia o sistema de áudio quando você clica no painel
         document.body.addEventListener('click', () => {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             document.getElementById('aviso-som').style.display = 'none';
         });
     </script>
