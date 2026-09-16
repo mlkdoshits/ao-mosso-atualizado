@@ -133,7 +133,6 @@
             80% { transform: translate(7px, 3px); }
         }
 
-        /* Animação unificada e super leve para Emojis */
         .emoji-voando {
             position: fixed;
             font-size: 2.5rem;
@@ -141,13 +140,11 @@
             z-index: 999;
         }
         
-        /* Emojis do SIM sobem voando */
         @keyframes subirFesta {
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
             100% { transform: translateY(-115vh) rotate(360deg); opacity: 0; }
         }
 
-        /* Emojis do NÃO caem chorando */
         @keyframes cairTriste {
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
             100% { transform: translateY(115vh) rotate(-360deg); opacity: 0; }
@@ -241,7 +238,6 @@
             enviar('NAO');
         });
 
-        // GERADOR DE EMOJIS SEM SCRIPTS EXTERNOS (Super leve)
         function chuvaDeEmojis(listaEmojis, tipo) {
             for (let i = 0; i < 25; i++) {
                 setTimeout(() => {
@@ -269,19 +265,22 @@
             socket.emit('resposta', resposta);
             document.getElementById('status').innerText = "Você respondeu: " + resposta;
             
-            card.classList.remove('celebrar', 'tremer');
+            card.className = 'card'; // Reseta as classes de animação anteriores com segurança
             void card.offsetWidth;
             
             if (resposta === 'SIM') {
                 card.classList.add('celebrar');
-                // Ativa a animação de emojis felizes decolando de baixo para cima
                 chuvaDeEmojis(['🎉', '🥳', '🍟', '🍕', '🍔', '🍗', '✨'], 'SUBIR');
             } else {
                 card.classList.add('tremer');
-                chuveiroTriste();
+                chuvaDeEmojis(['😭', '😢', '❌', '💔', '🫠'], 'CAIR');
                 setTimeout(() => card.classList.remove('tremer'), 1000);
             }
             resgatarBotaoNao();
         }
 
-        function chuveiroTriste() {
+        function enviarHorario() {
+            const hora = horarioInput.value.trim();
+            if(hora.length === 5) {
+                socket.emit('resposta', 'HORARIO:' + hora);
+                document.getElementById('status').innerText = "Horário do ao mosso enviado!";
