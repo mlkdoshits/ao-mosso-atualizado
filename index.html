@@ -209,7 +209,6 @@
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
 
-        // CLIQUE SEGURO: Apenas altera o texto da caixinha interna, com zero animação na tela
         btnSim.addEventListener('click', () => {
             socket.emit('resposta', 'SIM');
             statusDiv.innerHTML = "🎉 🥳 SÓ VAI! AO MOSSAR LIBERADO! 🍟🍕🍔";
@@ -231,14 +230,28 @@
 
         btnHora.addEventListener('click', () => {
             const hora = horarioInput.value.trim();
+            
             if(hora.length === 5) {
-                socket.emit('resposta', 'HORARIO:' + hora);
-                statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
-                statusDiv.style.color = "#856404";
-                statusDiv.style.backgroundColor = "#fff3cd";
-                statusDiv.style.border = "1px solid #ffeeba";
-                horarioInput.value = '';
-                resgatarBotaoNao();
+                // Separa a string em hora e minuto (Ex: '12:30' vira partes '12' e '30')
+                const partes = hora.split(':');
+                const h = parseInt(partes[0], 10);
+                const m = parseInt(partes[1], 10);
+
+                // VALIDAÇÃO DE HORÁRIO REAL (Horas de 0 a 23, Minutos de 0 a 59)
+                if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                    socket.emit('resposta', 'HORARIO:' + hora);
+                    statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
+                    statusDiv.style.color = "#856404";
+                    statusDiv.style.backgroundColor = "#fff3cd";
+                    statusDiv.style.border = "1px solid #ffeeba";
+                    horarioInput.value = '';
+                    resgatarBotaoNao();
+                } else {
+                    statusDiv.innerHTML = "⚠️ Loló, insira um horário que exista de verdade!";
+                    statusDiv.style.color = "#721c24";
+                    statusDiv.style.backgroundColor = "#f8d7da";
+                    statusDiv.style.border = "1px solid #f5c6cb";
+                }
             } else {
                 statusDiv.innerHTML = "⚠️ Insira o horário completo (Ex: 12:30)!";
                 statusDiv.style.color = "#333";
