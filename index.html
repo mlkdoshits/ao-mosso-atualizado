@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Já pode ao mossar?</title>
     <script src="/socket.io/socket.io.js"></script>
-    <!-- Biblioteca de confetes inclusa -->
     <script src="https://jsdelivr.net"></script>
     <style>
         body { 
@@ -60,7 +59,7 @@
             background: #dc3545; 
             position: absolute;
             right: 40px; 
-            transition: all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.12s ease-out;
             touch-action: none;
         }
         
@@ -95,7 +94,6 @@
             min-height: 24px;
         }
 
-        /* Animação de Terremoto para o Não */
         .tremer {
             animation: terremoto 0.1s ease-in-out infinite;
         }
@@ -107,7 +105,6 @@
             80% { transform: translate(7px, 3px); }
         }
 
-        /* Efeito das lágrimas/emojis caindo */
         .emoji-queda {
             position: fixed;
             top: -50px;
@@ -129,7 +126,7 @@
             <div style="position: absolute; left: 40px;">
                 <button class="sim" onclick="enviar('SIM')">Sim 👍</button>
             </div>
-            <button class="nao" id="btn-nao" onclick="enviar('NAO')">Não 👎</button>
+            <button class="nao" id="btn-nao">Não 👎</button>
         </div>
 
         <div class="sugestao-container">
@@ -178,6 +175,10 @@
         btnNao.addEventListener('mouseover', fugirDoAmigo);
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
+        btnNao.addEventListener('click', (e) => {
+            e.preventDefault();
+            enviar('NAO');
+        });
 
         function chuveiroTriste() {
             const emojis = ['😭', '😢', '❌', '💔', '🫠'];
@@ -199,10 +200,10 @@
             document.getElementById('status').innerText = "Você respondeu: " + resposta;
             
             if (resposta === 'SIM') {
-                // Explosão de confetes na tela dele
-                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+                }
             } else {
-                // Efeito caótico se clicar no Não
                 card.classList.add('tremer');
                 chuveiroTriste();
                 setTimeout(() => card.classList.remove('tremer'), 1000);
@@ -215,7 +216,9 @@
             if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
                 document.getElementById('status').innerText = "Horário do ao mosso enviado!";
-                confetti({ particleCount: 50, spread: 40, colors: ['#ff9f43'] });
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 50, spread: 40, colors: ['#ff9f43'] });
+                }
                 horarioInput.value = '';
                 resgatarBotaoNao();
             } else {
