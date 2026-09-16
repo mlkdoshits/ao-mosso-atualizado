@@ -187,8 +187,19 @@
         const horarioInput = document.getElementById('horario-input');
         const statusDiv = document.getElementById('status');
 
+        // Carrega instantaneamente o último valor salvo no navegador antes do F5
+        if (localStorage.getItem('ao_mosso_sim') !== null) {
+            document.getElementById('qtd-sim').innerText = localStorage.getItem('ao_mosso_sim');
+        }
+        if (localStorage.getItem('ao_mosso_nao') !== null) {
+            document.getElementById('qtd-nao').innerText = localStorage.getItem('ao_mosso_nao');
+        }
+
         // Recebe o placar sincronizado do servidor ao conectar ou atualizar
         socket.on('atualizar-placar', (placar) => {
+            localStorage.setItem('ao_mosso_sim', placar.sim);
+            localStorage.setItem('ao_mosso_nao', placar.nao);
+
             document.getElementById('qtd-sim').innerText = placar.sim;
             document.getElementById('qtd-nao').innerText = placar.nao;
         });
