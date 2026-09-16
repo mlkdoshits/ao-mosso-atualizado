@@ -50,7 +50,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
-        /* Placar reposicionado para dentro do card */
+        /* Placar ajustado para ficar dentro do card */
         .placar-container {
             display: flex;
             justify-content: center;
@@ -146,9 +146,10 @@
 <body>
 
     <div class="card" id="site-card">
+        <!-- Foto do cachorro -->
         <img src="cachorro.png" alt="Meme ao mosso" class="meme-img">
         
-        <!-- Placar posicionado abaixo da imagem -->
+        <!-- Placar de Liberados e Negados logo abaixo da imagem -->
         <div class="placar-container">
             <div class="placar-box">
                 <h3>Liberados 👍</h3>
@@ -267,7 +268,7 @@
                     statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
                     statusDiv.style.color = "#856404";
                     statusDiv.style.backgroundColor = "#fff3cd";
-                    statusDev.style.border = "1px solid #ffeeba";
+                    statusDiv.style.border = "1px solid #ffeeba";
                     horarioInput.value = '';
                     resgatarBotaoNao();
                 } else {
