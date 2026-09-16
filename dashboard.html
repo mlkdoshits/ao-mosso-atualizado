@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Painel - Ao Mosso</title>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://jsdelivr.net"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
@@ -56,9 +55,15 @@
             margin-top: 10px;
         }
 
-        .fundo-sim { background-color: #064e3b !important; }
+        /* Efeitos visuais em CSS puro nativo */
+        .fundo-sim { animation: festa-luzes 0.4s linear infinite; }
         .fundo-nao { background-color: #7f1d1d !important; animation: flash-alerta 0.2s ease infinite alternate; }
         .fundo-hora { background-color: #7c2d12 !important; }
+
+        @keyframes festa-luzes {
+            0%, 100% { background-color: #064e3b; }
+            50% { background-color: #047857; }
+        }
 
         @keyframes flash-alerta {
             0% { background-color: #7f1d1d; }
@@ -68,7 +73,7 @@
         .animacao-impacto { animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         #aviso-som {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX-%50%);
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; color: #888;
         }
 
@@ -105,21 +110,6 @@
         let contNao = 0;
         
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function festaDeConfete() {
-            if (typeof confetti !== 'function') return;
-            const duracao = 2 * 1000;
-            const fim = Date.now() + duracao;
-
-            (function quadro() {
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
-
-                if (Date.now() < fim) {
-                    requestAnimationFrame(quadro);
-                }
-            }());
-        }
 
         function tocarSom(tipo) {
             try {
@@ -172,7 +162,6 @@
                 txtResposta.style.color = "#2ecc71";
                 txtMeme.innerText = "LARGUE TUDO E VÁ AO MOSSAR! 🏃‍♂️💨🍔";
                 tocarSom('SIM');
-                festaDeConfete();
             } 
             else if (data === 'NAO') {
                 contNao++;
@@ -182,7 +171,10 @@
                 txtResposta.style.color = "#e74c3c";
                 txtMeme.innerText = "Fique na cadeira. Fome de ao mossar cancelada temporariamente. 🥲💻";
                 tocarSom('NAO');
-                setTimeout(() => document.body.style.backgroundColor = '#450a0a', 2000);
+                setTimeout(() => {
+                    document.body.className = '';
+                    document.body.style.backgroundColor = '#450a0a';
+                }, 2000);
             } 
             else if (data.startsWith('HORARIO:')) {
                 const horaSugerida = data.replace('HORARIO:', '');
