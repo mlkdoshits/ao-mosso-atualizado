@@ -52,6 +52,11 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
+        h1 { 
+            font-size: 2.3rem; 
+            color: #333; 
+            margin-bottom: 30px;
+        }
         .btn-container {
             display: flex;
             justify-content: center;
@@ -130,6 +135,9 @@
     <div class="card" id="site-card">
         <img src="cachorro.png" alt="Meme ao mosso" class="meme-img">
         
+        <!-- ALTERADO: Pergunta personalizada para o Loló -->
+        <h1>Loló, já pode ao mossar? 🍽️</h1>
+        
         <div class="btn-container" id="area-botoes">
             <div style="position: absolute; left: 40px;">
                 <button class="sim" id="btn-sim-clique">Sim 👍</button>
@@ -145,7 +153,6 @@
             </div>
         </div>
 
-        <!-- O texto de status com os emojis mudará aqui embaixo -->
         <div id="status"></div>
     </div>
 
@@ -200,7 +207,6 @@
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
 
-        // TEXTOS ATUALIZADOS APENAS POR STRING DE TEXTO - ZERO RISCO DE TRAVAR
         btnSim.addEventListener('click', () => {
             socket.emit('resposta', 'SIM');
             statusDiv.innerHTML = "🎉 🥳 SÓ VAI! AO MOSSAR LIBERADO! 🍟🍕🍔";
