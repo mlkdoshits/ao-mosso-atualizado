@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Painel - Ao Mosso</title>
     <script src="/socket.io/socket.io.js"></script>
+    <!-- Biblioteca de confetes inclusa no painel -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
@@ -14,6 +16,7 @@
             color: #fff;
             min-height: 100vh;
             transition: background 0.5s ease;
+            overflow: hidden;
         }
         
         .placar-container {
@@ -55,8 +58,13 @@
         }
 
         .fundo-sim { background-color: #064e3b !important; }
-        .fundo-nao { background-color: #7f1d1d !important; }
+        .fundo-nao { background-color: #7f1d1d !important; animation: flash-alerta 0.2s ease infinite alternate; }
         .fundo-hora { background-color: #7c2d12 !important; }
+
+        @keyframes flash-alerta {
+            0% { background-color: #7f1d1d; }
+            100% { background-color: #450a0a; }
+        }
 
         .animacao-impacto { animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
@@ -98,6 +106,20 @@
         let contNao = 0;
         
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function festaDeConfete() {
+            const duracao = 2 * 1000;
+            const fim = Date.now() + duracao;
+
+            (function quadro() {
+                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+
+                if (Date.now() < fim) {
+                    requestAnimationFrame(quadro);
+                }
+            }());
+        }
 
         function tocarSom(tipo) {
             try {
@@ -147,8 +169,9 @@
                 document.body.classList.add('fundo-sim');
                 txtResposta.innerText = "SÓ VAI! 🎉";
                 txtResposta.style.color = "#2ecc71";
-                txtMeme.innerText = "LARGUE TUDO E VÁ AO MOSSAR! 🏃‍♂️💨🍔";
+                txtMeme.innerText = "LARGUE TUDO E VÁ AO MOSSAR! 跑🏃‍♂️💨🍔";
                 tocarSom('SIM');
+                festaDeConfete(); // Ativa os tiros de papel picado no seu monitor
             } 
             else if (data === 'NAO') {
                 contNao++;
@@ -158,6 +181,9 @@
                 txtResposta.style.color = "#e74c3c";
                 txtMeme.innerText = "Fique na cadeira. Fome de ao mossar cancelada temporariamente. 🥲💻";
                 tocarSom('NAO');
+                
+                // Para o pisca de alerta vermelho depois de 2 segundos para não cansar as vistas
+                setTimeout(() => document.body.style.backgroundColor = '#450a0a', 2000);
             } 
             else if (data.startsWith('HORARIO:')) {
                 const horaSugerida = data.replace('HORARIO:', '');
