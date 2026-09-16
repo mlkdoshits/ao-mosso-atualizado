@@ -44,7 +44,6 @@
             max-width: 500px;
             margin: 0 auto;
             position: relative;
-            transition: transform 0.2s;
         }
         h1 { 
             font-size: 2.5rem; 
@@ -69,16 +68,14 @@
             color: white; 
             font-weight: bold;
             box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-            transition: transform 0.1s; 
         }
         .sim { background: #28a745; }
-        .sim:hover { transform: scale(1.1); background: #218838; }
         
         .nao { 
             background: #dc3545; 
             position: absolute;
             right: 40px; 
-            transition: all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.12s ease-out;
             touch-action: none;
         }
         
@@ -103,7 +100,6 @@
             font-weight: bold;
         }
         .btn-relogio { background: #ff9f43; font-size: 1.1rem; padding: 12px 20px; }
-        .btn-relogio:hover { background: #ee5253; }
 
         #status { 
             margin-top: 20px; 
@@ -114,12 +110,11 @@
         }
 
         .celebrar {
-            animation: puloFesta 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: puloFesta 0.4s ease-out;
         }
         @keyframes puloFesta {
-            0% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
             50% { transform: scale(1.06); }
-            100% { transform: scale(1); }
         }
 
         .tremer {
@@ -129,8 +124,6 @@
             0%, 100% { transform: translate(0, 0); }
             20% { transform: translate(-8px, 5px); }
             40% { transform: translate(6px, -4px); }
-            60% { transform: translate(-5px, -2px); }
-            80% { transform: translate(7px, 3px); }
         }
 
         .emoji-voando {
@@ -169,7 +162,8 @@
         
         <div class="btn-container" id="area-botoes">
             <div style="position: absolute; left: 40px;">
-                <button class="sim" onclick="enviar('SIM')">Sim 👍</button>
+                <!-- Mudado o id para forçar o clique nativo direto -->
+                <button class="sim" id="btn-sim-clique">Sim 👍</button>
             </div>
             <button class="nao" id="btn-nao">Não 👎</button>
         </div>
@@ -178,7 +172,7 @@
             <p>Se não der para ao mossar agora, que horas vai ser o ao mosso?</p>
             <div class="input-group">
                 <input type="text" id="horario-input" placeholder="00:00" maxlength="5">
-                <button class="btn-relogio" onclick="enviarHorario()">Sugerir Horário do Ao Mosso ⏰</button>
+                <button class="btn-relogio" id="btn-hora-clique">Sugerir Horário do Ao Mosso ⏰</button>
             </div>
         </div>
 
@@ -187,7 +181,9 @@
 
     <script>
         const socket = io();
+        const btnSim = document.getElementById('btn-sim-clique');
         const btnNao = document.getElementById('btn-nao');
+        const btnHora = document.getElementById('btn-hora-clique');
         const areaBotoes = document.getElementById('area-botoes');
         const horarioInput = document.getElementById('horario-input');
         const card = document.getElementById('site-card');
@@ -233,54 +229,59 @@
         btnNao.addEventListener('mouseover', fugirDoAmigo);
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
-        btnNao.addEventListener('click', (e) => {
-            e.preventDefault();
-            enviar('NAO');
-        });
 
         function chuvaDeEmojis(listaEmojis, tipo) {
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < 20; i++) {
                 setTimeout(() => {
                     const e = document.createElement('div');
                     e.classList.add('emoji-voando');
                     e.innerText = listaEmojis[Math.floor(Math.random() * listaEmojis.length)];
                     e.style.left = Math.random() * 100 + 'vw';
-                    e.style.fontSize = (Math.random() * 1.5 + 1.5) + 'rem';
                     
                     if (tipo === 'SUBIR') {
                         e.style.bottom = '-50px';
-                        e.style.animation = 'subirFesta ' + (Math.random() * 1 + 1) + 's cubic-bezier(0.1, 0.8, 0.3, 1) forwards';
+                        e.style.animation = 'subirFesta ' + (Math.random() * 0.8 + 0.8) + 's ease-out forwards';
                     } else {
                         e.style.top = '-50px';
-                        e.style.animation = 'cairTriste ' + (Math.random() * 1.2 + 0.8) + 's linear forwards';
+                        e.style.animation = 'cairTriste ' + (Math.random() * 1 + 0.8) + 's linear forwards';
                     }
                     
                     document.body.appendChild(e);
-                    setTimeout(() => e.remove(), 2000);
+                    setTimeout(() => e.remove(), 1800);
                 }, i * 40);
             }
         }
 
-        function enviar(resposta) {
-            socket.emit('resposta', resposta);
-            document.getElementById('status').innerText = "Você respondeu: " + resposta;
-            
-            card.className = 'card'; // Reseta as classes de animação anteriores com segurança
+        // Cliques configurados por escuta direta (Evita travar o HTML)
+        btnSim.addEventListener('click', () => {
+            socket.emit('resposta', 'SIM');
+            document.getElementById('status').innerText = "Você respondeu: SIM";
+            card.className = 'card';
             void card.offsetWidth;
-            
-            if (resposta === 'SIM') {
-                card.classList.add('celebrar');
-                chuvaDeEmojis(['🎉', '🥳', '🍟', '🍕', '🍔', '🍗', '✨'], 'SUBIR');
-            } else {
-                card.classList.add('tremer');
-                chuvaDeEmojis(['😭', '😢', '❌', '💔', '🫠'], 'CAIR');
-                setTimeout(() => card.classList.remove('tremer'), 1000);
-            }
+            card.classList.add('celebrar');
+            chuvaDeEmojis(['🎉', '🥳', '🍟', '🍕', '🍔', '🍗'], 'SUBIR');
             resgatarBotaoNao();
-        }
+        });
 
-        function enviarHorario() {
+        btnNao.addEventListener('click', (e) => {
+            e.preventDefault();
+            socket.emit('resposta', 'NAO');
+            document.getElementById('status').innerText = "Você respondeu: NAO";
+            card.className = 'card';
+            void card.offsetWidth;
+            card.classList.add('tremer');
+            chuvaDeEmojis(['😭', '😢', '❌', '💔', '🫠'], 'CAIR');
+            setTimeout(() => card.className = 'card', 1000);
+            resgatarBotaoNao();
+        });
+
+        btnHora.addEventListener('click', () => {
             const hora = horarioInput.value.trim();
             if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
                 document.getElementById('status').innerText = "Horário do ao mosso enviado!";
+                card.className = 'card';
+                void card.offsetWidth;
+                card.classList.add('celebrar');
+                chuvaDeEmojis(['⏰', '🍕', '✨'], 'SUBIR');
+                horarioInput.value = '';
