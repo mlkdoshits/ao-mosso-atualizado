@@ -44,7 +44,6 @@
             position: relative;
         }
         
-        /* ESTILO DA IMAGEM DO CACHORRINHO */
         .meme-img {
             max-width: 100%;
             height: auto;
@@ -105,10 +104,13 @@
 
         #status { 
             margin-top: 20px; 
-            font-size: 1.2rem; 
+            font-size: 1.4rem; 
             color: #222; 
             font-weight: bold;
-            min-height: 24px;
+            min-height: 30px;
+            padding: 10px;
+            border-radius: 10px;
+            transition: all 0.2s;
         }
     </style>
 </head>
@@ -126,7 +128,6 @@
     </div>
 
     <div class="card" id="site-card">
-        <!-- IMAGEM DO MEME ADICIONADA AQUI -->
         <img src="cachorro.png" alt="Meme ao mosso" class="meme-img">
         
         <div class="btn-container" id="area-botoes">
@@ -144,6 +145,7 @@
             </div>
         </div>
 
+        <!-- O texto de status com os emojis mudará aqui embaixo -->
         <div id="status"></div>
     </div>
 
@@ -154,6 +156,7 @@
         const btnHora = document.getElementById('btn-hora-clique');
         const areaBotoes = document.getElementById('area-botoes');
         const horarioInput = document.getElementById('horario-input');
+        const statusDiv = document.getElementById('status');
 
         let contSim = 0;
         let contNao = 0;
@@ -197,16 +200,19 @@
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
 
+        // TEXTOS ATUALIZADOS APENAS POR STRING DE TEXTO - ZERO RISCO DE TRAVAR
         btnSim.addEventListener('click', () => {
             socket.emit('resposta', 'SIM');
-            document.getElementById('status').innerText = "Você respondeu: SIM";
+            statusDiv.innerHTML = "🎉 🥳 SÓ VAI! AO MOSSAR LIBERADO! 🍟🍕🍔";
+            statusDiv.style.color = "#28a745";
             resgatarBotaoNao();
         });
 
         btnNao.addEventListener('click', (e) => {
             e.preventDefault();
             socket.emit('resposta', 'NAO');
-            document.getElementById('status').innerText = "Você respondeu: NAO";
+            statusDiv.innerHTML = "😭 ❌ FOME CANCELADA! DEU RUIM... 💔🫠";
+            statusDiv.style.color = "#dc3545";
             resgatarBotaoNao();
         });
 
@@ -214,11 +220,13 @@
             const hora = horarioInput.value.trim();
             if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
-                document.getElementById('status').innerText = "Horário do ao mosso enviado!";
+                statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
+                statusDiv.style.color = "#ff9f43";
                 horarioInput.value = '';
                 resgatarBotaoNao();
             } else {
-                document.getElementById('status').innerText = "Insira o horário completo (Ex: 12:30)!";
+                statusDiv.innerHTML = "⚠️ Insira o horário completo (Ex: 12:30)!";
+                statusDiv.style.color = "#333";
             }
         });
 
