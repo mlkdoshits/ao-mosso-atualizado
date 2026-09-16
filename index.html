@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Já pode ao mossar?</title>
     <script src="/socket.io/socket.io.js"></script>
+    <!-- Biblioteca de confetes inclusa -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
@@ -15,6 +17,7 @@
             min-height: 100vh;
             box-sizing: border-box;
             user-select: none;
+            overflow-x: hidden;
         }
         .card {
             background: white;
@@ -30,18 +33,15 @@
             color: #333; 
             margin-bottom: 30px;
         }
-        
-        /* CORREÇÃO DO CONTAINER: Organiza os botões em linha com espaçamento seguro */
         .btn-container {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 30px;
             margin-bottom: 30px;
-            height: 110px; /* Aumentado para dar mais área livre para o botão fugir */
+            height: 110px; 
             position: relative;
         }
-        
         button { 
             font-size: 1.5rem; 
             padding: 15px 35px; 
@@ -56,11 +56,10 @@
         .sim { background: #28a745; }
         .sim:hover { transform: scale(1.1); background: #218838; }
         
-        /* CORREÇÃO DO BOTÃO NÃO: Inicializa em posição absoluta calculada para o lado direito, sem esmagar o botão Sim */
         .nao { 
             background: #dc3545; 
             position: absolute;
-            right: 40px; /* Garante início na ponta direita */
+            right: 40px; 
             transition: all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             touch-action: none;
         }
@@ -95,14 +94,38 @@
             font-weight: bold;
             min-height: 24px;
         }
+
+        /* Animação de Terremoto para o Não */
+        .tremer {
+            animation: terremoto 0.1s ease-in-out infinite;
+        }
+        @keyframes terremoto {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-8px, 5px); }
+            40% { transform: translate(6px, -4px); }
+            60% { transform: translate(-5px, -2px); }
+            80% { transform: translate(7px, 3px); }
+        }
+
+        /* Efeito das lágrimas/emojis caindo */
+        .emoji-queda {
+            position: fixed;
+            top: -50px;
+            font-size: 2rem;
+            animation: cair 2s linear forwards;
+            pointer-events: none;
+            z-index: 999;
+        }
+        @keyframes cair {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
+    <div class="card" id="site-card">
         <h1>Já pode ao mossar? 🍽️</h1>
         
         <div class="btn-container" id="area-botoes">
-            <!-- Forçado o botão Sim a ficar alinhado à esquerda para nunca cruzar caminhos no início -->
             <div style="position: absolute; left: 40px;">
                 <button class="sim" onclick="enviar('SIM')">Sim 👍</button>
             </div>
@@ -125,6 +148,7 @@
         const btnNao = document.getElementById('btn-nao');
         const areaBotoes = document.getElementById('area-botoes');
         const horarioInput = document.getElementById('horario-input');
+        const card = document.getElementById('site-card');
 
         horarioInput.addEventListener('input', (e) => {
             let valor = e.target.value.replace(/\D/g, "");
@@ -136,24 +160,16 @@
 
         function fugirDoAmigo(evento) {
             if(evento) evento.preventDefault();
-
-            // Área limite total do container interno para o botão deslizar livremente
             const larguraContainer = areaBotoes.offsetWidth - btnNao.offsetWidth;
             const alturaContainer = areaBotoes.offsetHeight - btnNao.offsetHeight;
             
-            // Sorteia uma posição horizontal na tela
             let novoX = Math.random() * larguraContainer;
-            
-            // Sorteia uma posição vertical dentro da caixinha (para o botão subir e descer também!)
             let novoY = Math.random() * alturaContainer;
             
-            // CORREÇÃO: Garante que o botão Não NUNCA vá para cima do botão Sim (lado esquerdo fixo)
-            // Se o sorteio mandar o botão para perto da esquerda (área do botão Sim), joga ele de volta para a direita
             if (novoX < 160) {
                 novoX = 160 + (Math.random() * (larguraContainer - 160));
             }
             
-            // Remove a propriedade 'right' inicial para dar controle total ao 'left' do JavaScript
             btnNao.style.right = 'auto';
             btnNao.style.left = novoX + 'px';
             btnNao.style.top = novoY + 'px';
@@ -163,9 +179,34 @@
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
 
+        function chuveiroTriste() {
+            const emojis = ['😭', '😢', '❌', '💔', '🫠'];
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const e = document.createElement('div');
+                    e.classList.add('emoji-queda');
+                    e.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    e.style.left = Math.random() * 100 + 'vw';
+                    e.style.animationDuration = (Math.random() * 1.5 + 1) + 's';
+                    document.body.appendChild(e);
+                    setTimeout(() => e.remove(), 2500);
+                }, i * 50);
+            }
+        }
+
         function enviar(resposta) {
             socket.emit('resposta', resposta);
             document.getElementById('status').innerText = "Você respondeu: " + resposta;
+            
+            if (resposta === 'SIM') {
+                // Explosão de confetes na tela dele
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            } else {
+                // Efeito caótico se clicar no Não
+                card.classList.add('tremer');
+                chuveiroTriste();
+                setTimeout(() => card.classList.remove('tremer'), 1000);
+            }
             resgatarBotaoNao();
         }
 
@@ -174,6 +215,7 @@
             if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
                 document.getElementById('status').innerText = "Horário do ao mosso enviado!";
+                confetti({ particleCount: 50, spread: 40, colors: ['#ff9f43'] });
                 horarioInput.value = '';
                 resgatarBotaoNao();
             } else {
@@ -181,7 +223,6 @@
             }
         }
 
-        // Reseta o botão para o canto direito padrão com segurança
         function resgatarBotaoNao() {
             btnNao.style.left = 'auto';
             btnNao.style.top = 'auto';
