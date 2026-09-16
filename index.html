@@ -14,6 +14,7 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
             min-height: 100vh;
             box-sizing: border-box;
+            user-select: none; /* Evita que ele selecione o texto sem querer ao tentar clicar rápido */
         }
         .card {
             background: white;
@@ -34,7 +35,7 @@
             justify-content: center;
             gap: 20px;
             margin-bottom: 30px;
-            height: 80px;
+            height: 90px;
             align-items: center;
             position: relative;
         }
@@ -47,7 +48,7 @@
             color: white; 
             font-weight: bold;
             box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-            transition: all 0.2s; 
+            transition: transform 0.1s; 
         }
         .sim { background: #28a745; }
         .sim:hover { transform: scale(1.1); background: #218838; }
@@ -56,6 +57,8 @@
             background: #dc3545; 
             position: absolute;
             left: 55%;
+            transition: all 0.15s ease-out; /* Deixa o movimento de fuga mais fluido e rápido */
+            touch-action: none; /* Bloqueia gestos padrões do celular para a fuga ser imediata */
         }
         
         .sugestao-container {
@@ -74,8 +77,9 @@
             font-size: 1.1rem;
             border: 2px solid #ddd;
             border-radius: 10px;
-            width: 120px;
+            width: 140px;
             text-align: center;
+            font-weight: bold;
         }
         .btn-relogio { background: #ff9f43; font-size: 1.1rem; padding: 12px 20px; }
         .btn-relogio:hover { background: #ee5253; }
@@ -101,7 +105,8 @@
         <div class="sugestao-container">
             <p>Se não der para ao mossar agora, que horas vai ser o ao mosso?</p>
             <div class="input-group">
-                <input type="text" id="horario-input" placeholder="Ex: 12:30">
+                <!-- Mudado para aceitar apenas formato de horário e máscara automática -->
+                <input type="text" id="horario-input" placeholder="00:00" maxlength="5">
                 <button class="btn-relogio" onclick="enviarHorario()">Sugerir Horário do Ao Mosso ⏰</button>
             </div>
         </div>
@@ -113,12 +118,44 @@
         const socket = io();
         const btnNao = document.getElementById('btn-nao');
         const areaBotoes = document.getElementById('area-botoes');
+        const horarioInput = document.getElementById('horario-input');
 
-        btnNao.addEventListener('mouseover', () => {
-            const larguraContainer = areaBotoes.offsetWidth - btnNao.offsetWidth;
-            const novoX = Math.random() * larguraContainer;
-            btnNao.style.left = novoX + 'px';
+        // VALIDAÇÃO DO CAMPO DE HORA: Força formato 00:00 e remove letras
+        horarioInput.addEventListener('input', (e) => {
+            let valor = e.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+            
+            if (valor.length > 2) {
+                valor = valor.substring(0, 2) + ":" + valor.substring(2, 4);
+            }
+            
+            e.target.value = valor;
         });
+
+        // FUNÇÃO DE FUGA DO BOTÃO NÃO
+        function fugirDoAmigo(evento) {
+            // Evita que o clique aconteça no celular
+            if(evento) evento.preventDefault();
+
+            const larguraContainer = areaBotoes.offsetWidth - btnNao.offsetWidth;
+            const alturaContainer = areaBotoes.offsetHeight - btnNao.offsetHeight;
+            
+            // Gera posições totalmente aleatórias dentro do bloco
+            let novoX = Math.random() * larguraContainer;
+            
+            // Garante que o botão mude de posição de forma drástica para ele não conseguir clicar de jeito nenhum
+            if (Math.abs(novoX - parseFloat(btnNao.style.left || 0)) < 100) {
+                novoX = (novoX + 150) % larguraContainer;
+            }
+            
+            btnNao.style.left = novoX + 'px';
+        }
+
+        // Detecta aproximação do mouse (Computador)
+        btnNao.addEventListener('mouseover', fugirDoAmigo);
+        // Detecta a intenção de clique (Computador avançado)
+        btnNao.addEventListener('pointerdown', fugirDoAmigo);
+        // Detecta o início do toque do dedo na tela (Celular)
+        btnNao.addEventListener('touchstart', fugirDoAmigo);
 
         function enviar(resposta) {
             socket.emit('resposta', resposta);
@@ -127,11 +164,15 @@
         }
 
         function enviarHorario() {
-            const hora = document.getElementById('horario-input').value.trim();
-            if(hora) {
+            const hora = horarioInput.value.trim();
+            
+            // Validação simples para conferir se ele preencheu o horário completo antes de enviar
+            if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
                 document.getElementById('status').innerText = "Horário do ao mosso enviado!";
-                document.getElementById('horario-input').value = '';
+                horarioInput.value = '';
+            } else {
+                document.getElementById('status').innerText = "Insira o horário completo (Ex: 12:30)!";
             }
         }
     </script>
