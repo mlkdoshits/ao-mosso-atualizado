@@ -11,11 +11,9 @@
             text-align: center; 
             margin: 0;
             padding: 40px 20px; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+            background: #f5f7fa; 
             min-height: 100vh;
             box-sizing: border-box;
-            user-select: none;
-            overflow-x: hidden;
         }
 
         .placar-container {
@@ -31,7 +29,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             min-width: 100px;
         }
-        .placar-box h3 { margin: 0 0 5px 0; color: #777; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;}
+        .placar-box h3 { margin: 0 0 5px 0; color: #777; font-size: 0.8rem; text-transform: uppercase; }
         .placar-box span { font-size: 1.6rem; font-weight: bold; }
         #qtd-sim { color: #28a745; }
         #qtd-nao { color: #dc3545; }
@@ -75,7 +73,6 @@
             background: #dc3545; 
             position: absolute;
             right: 40px; 
-            transition: all 0.12s ease-out;
             touch-action: none;
         }
         
@@ -108,40 +105,6 @@
             font-weight: bold;
             min-height: 24px;
         }
-
-        .celebrar {
-            animation: puloFesta 0.4s ease-out;
-        }
-        @keyframes puloFesta {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.06); }
-        }
-
-        .tremer {
-            animation: terremoto 0.1s ease-in-out infinite;
-        }
-        @keyframes terremoto {
-            0%, 100% { transform: translate(0, 0); }
-            20% { transform: translate(-8px, 5px); }
-            40% { transform: translate(6px, -4px); }
-        }
-
-        .emoji-voando {
-            position: fixed;
-            font-size: 2.5rem;
-            pointer-events: none;
-            z-index: 999;
-        }
-        
-        @keyframes subirFesta {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-115vh) rotate(360deg); opacity: 0; }
-        }
-
-        @keyframes cairTriste {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(115vh) rotate(-360deg); opacity: 0; }
-        }
     </style>
 </head>
 <body>
@@ -162,7 +125,6 @@
         
         <div class="btn-container" id="area-botoes">
             <div style="position: absolute; left: 40px;">
-                <!-- Mudado o id para forçar o clique nativo direto -->
                 <button class="sim" id="btn-sim-clique">Sim 👍</button>
             </div>
             <button class="nao" id="btn-nao">Não 👎</button>
@@ -186,7 +148,6 @@
         const btnHora = document.getElementById('btn-hora-clique');
         const areaBotoes = document.getElementById('area-botoes');
         const horarioInput = document.getElementById('horario-input');
-        const card = document.getElementById('site-card');
 
         let contSim = 0;
         let contNao = 0;
@@ -230,36 +191,9 @@
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
 
-        function chuvaDeEmojis(listaEmojis, tipo) {
-            for (let i = 0; i < 20; i++) {
-                setTimeout(() => {
-                    const e = document.createElement('div');
-                    e.classList.add('emoji-voando');
-                    e.innerText = listaEmojis[Math.floor(Math.random() * listaEmojis.length)];
-                    e.style.left = Math.random() * 100 + 'vw';
-                    
-                    if (tipo === 'SUBIR') {
-                        e.style.bottom = '-50px';
-                        e.style.animation = 'subirFesta ' + (Math.random() * 0.8 + 0.8) + 's ease-out forwards';
-                    } else {
-                        e.style.top = '-50px';
-                        e.style.animation = 'cairTriste ' + (Math.random() * 1 + 0.8) + 's linear forwards';
-                    }
-                    
-                    document.body.appendChild(e);
-                    setTimeout(() => e.remove(), 1800);
-                }, i * 40);
-            }
-        }
-
-        // Cliques configurados por escuta direta (Evita travar o HTML)
         btnSim.addEventListener('click', () => {
             socket.emit('resposta', 'SIM');
             document.getElementById('status').innerText = "Você respondeu: SIM";
-            card.className = 'card';
-            void card.offsetWidth;
-            card.classList.add('celebrar');
-            chuvaDeEmojis(['🎉', '🥳', '🍟', '🍕', '🍔', '🍗'], 'SUBIR');
             resgatarBotaoNao();
         });
 
@@ -267,11 +201,6 @@
             e.preventDefault();
             socket.emit('resposta', 'NAO');
             document.getElementById('status').innerText = "Você respondeu: NAO";
-            card.className = 'card';
-            void card.offsetWidth;
-            card.classList.add('tremer');
-            chuvaDeEmojis(['😭', '😢', '❌', '💔', '🫠'], 'CAIR');
-            setTimeout(() => card.className = 'card', 1000);
             resgatarBotaoNao();
         });
 
@@ -280,8 +209,18 @@
             if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
                 document.getElementById('status').innerText = "Horário do ao mosso enviado!";
-                card.className = 'card';
-                void card.offsetWidth;
-                card.classList.add('celebrar');
-                chuvaDeEmojis(['⏰', '🍕', '✨'], 'SUBIR');
                 horarioInput.value = '';
+                resgatarBotaoNao();
+            } else {
+                document.getElementById('status').innerText = "Insira o horário completo (Ex: 12:30)!";
+            }
+        });
+
+        function resgatarBotaoNao() {
+            btnNao.style.left = 'auto';
+            btnNao.style.top = 'auto';
+            btnNao.style.right = '40px';
+        }
+    </script>
+</body>
+</html>
