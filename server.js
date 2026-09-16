@@ -12,6 +12,10 @@ const io = new Server(server);
 const TELEGRAM_BOT_TOKEN = '8718522847:AAGV1HaW3wf2R11vYP-I3zm9unAg3J0y-7Y';
 const TELEGRAM_CHAT_ID = '8524528778';
 
+// Contadores globais salvos no servidor
+let contSim = 0;
+let contNao = 0;
+
 // Função para enviar avisos no Telegram
 async function enviarAvisoTelegram(texto) {
     try {
@@ -30,33 +34,37 @@ async function enviarAvisoTelegram(texto) {
     }
 }
 
-// Configura o servidor para ler arquivos soltos na raiz (sem pastas)
+// Configura o servidor para ler arquivos soltos na raiz
 app.use(express.static(__dirname));
 
-// Abre a votação no link principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Abre o painel de resultados no link /dashboard
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 io.on('connection', (socket) => {
-  socket.on('resposta', (data) => {
-    // Repassa para os painéis conectados (WebSocket)
-    io.emit('nova-resposta', data);
+  // Envia o placar atual imediatamente para quem acabou de se conectar/atualizar a página
+  socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
 
-    // Dispara o aviso correspondente no Telegram
+  socket.on('resposta', (data) => {
+    // Atualiza os contadores no servidor baseando-se na resposta
     if (data === 'SIM') {
+        contSim++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
     } else if (data === 'NAO') {
+        contNao++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n❌ Uma alma corajosa conseguiu acertar os 10% de chance e negou o ao mosso! 🥲");
     } else if (data.startsWith('HORARIO:')) {
         const hora = data.replace('HORARIO:', '');
         enviarAvisoTelegram(`⏰ *Sugestão de Horário:* Marcaram o compromisso oficial do ao mosso para às *${hora}*! ✨`);
     }
+
+    // Transmite a nova resposta e o placar atualizado para TODOS os dispositivos conectados
+    io.emit('nova-resposta', data);
+    io.emit('atualizar-placar', { sim: contSim, nao: contNao });
   });
 });
 
