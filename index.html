@@ -16,11 +16,7 @@
             box-sizing: border-box;
             user-select: none;
             overflow-x: hidden;
-            transition: background-color 0.15s ease;
         }
-
-        .flash-verde { background-color: #28a745 !important; }
-        .flash-vermelho { background-color: #dc3545 !important; }
 
         .placar-container {
             display: flex;
@@ -63,17 +59,15 @@
             color: #333; 
             margin-bottom: 30px;
         }
-
-        /* CONTAINER CORRIGIDO: Alinhamento vertical simples sem quebrar o JavaScript */
         .btn-container {
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            gap: 30px;
             margin-bottom: 30px;
-            height: 160px; 
+            height: 110px; 
             position: relative;
         }
-        
         button { 
             font-size: 1.5rem; 
             padding: 15px 35px; 
@@ -83,21 +77,14 @@
             color: white; 
             font-weight: bold;
             box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-            width: 200px;
         }
-        .sim { 
-            background: #28a745;
-            position: absolute;
-            top: 5px;
-        }
+        .sim { background: #28a745; }
         
-        /* O botão Não usa margem segura em pixels fixos para evitar conflito de posição */
         .nao { 
             background: #dc3545; 
             position: absolute;
-            top: 85px; 
+            right: 40px; 
             touch-action: none;
-            transition: all 0.1s ease-out;
         }
         
         .sugestao-container {
@@ -120,7 +107,7 @@
             text-align: center;
             font-weight: bold;
         }
-        .btn-relogio { background: #ff9f43; font-size: 1.1rem; padding: 12px 20px; width: auto; }
+        .btn-relogio { background: #ff9f43; font-size: 1.1rem; padding: 12px 20px; }
 
         #status { 
             margin-top: 20px; 
@@ -131,6 +118,7 @@
             padding: 12px;
             border-radius: 12px;
             background: transparent;
+            transition: all 0.2s ease;
         }
     </style>
 </head>
@@ -153,7 +141,9 @@
         <h1>Loló, já pode ao mossar? 🍽️</h1>
         
         <div class="btn-container" id="area-botoes">
-            <button class="sim" id="btn-sim-clique">Sim 👍</button>
+            <div style="position: absolute; left: 40px;">
+                <button class="sim" id="btn-sim-clique">Sim 👍</button>
+            </div>
             <button class="nao" id="btn-nao">Não 👎</button>
         </div>
 
@@ -198,23 +188,19 @@
             e.target.value = valor;
         });
 
-        // CORREÇÃO DA FUGA: Sorteia posições horizontais reais sem conflito com o 'transform'
         function fugirDoAmigo(evento) {
             if(evento) evento.preventDefault();
-            
-            // Calcula os limites reais de largura do card para o botão dançar livre
             const larguraContainer = areaBotoes.offsetWidth - btnNao.offsetWidth;
             const alturaContainer = areaBotoes.offsetHeight - btnNao.offsetHeight;
             
             let novoX = Math.random() * larguraContainer;
             let novoY = Math.random() * alturaContainer;
             
-            // Evita que o botão mude de lugar e suba para cima do Sim (bloqueia o topo)
-            if (novoY < 75) {
-                novoY = 75 + (Math.random() * (alturaContainer - 75));
+            if (novoX < 160) {
+                novoX = 160 + (Math.random() * (larguraContainer - 160));
             }
             
-            // Move usando posições nativas puras
+            btnNao.style.right = 'auto';
             btnNao.style.left = novoX + 'px';
             btnNao.style.top = novoY + 'px';
         }
@@ -223,20 +209,12 @@
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
 
-        function aplicarFlashTela(classeCor) {
-            document.body.classList.add(classeCor);
-            setTimeout(() => {
-                document.body.classList.remove(classeCor);
-            }, 300);
-        }
-
         btnSim.addEventListener('click', () => {
             socket.emit('resposta', 'SIM');
             statusDiv.innerHTML = "🎉 🥳 SÓ VAI! AO MOSSAR LIBERADO! 🍟🍕🍔";
             statusDiv.style.color = "#155724";
             statusDiv.style.backgroundColor = "#d4edda";
             statusDiv.style.border = "1px solid #c3e6cb";
-            aplicarFlashTela('flash-verde');
             resgatarBotaoNao();
         });
 
@@ -247,7 +225,6 @@
             statusDiv.style.color = "#721c24";
             statusDiv.style.backgroundColor = "#f8d7da";
             statusDiv.style.border = "1px solid #f5c6cb";
-            aplicarFlashTela('flash-vermelho');
             resgatarBotaoNao();
         });
 
@@ -255,17 +232,18 @@
             const hora = horarioInput.value.trim();
             
             if(hora.length === 5) {
+                // Separa a string em hora e minuto (Ex: '12:30' vira partes '12' e '30')
                 const partes = hora.split(':');
                 const h = parseInt(partes[0], 10);
                 const m = parseInt(partes[1], 10);
 
+                // VALIDAÇÃO DE HORÁRIO REAL (Horas de 0 a 23, Minutos de 0 a 59)
                 if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
                     socket.emit('resposta', 'HORARIO:' + hora);
                     statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
                     statusDiv.style.color = "#856404";
                     statusDiv.style.backgroundColor = "#fff3cd";
                     statusDiv.style.border = "1px solid #ffeeba";
-                    aplicarFlashTela('flash-verde');
                     horarioInput.value = '';
                     resgatarBotaoNao();
                 } else {
@@ -273,7 +251,6 @@
                     statusDiv.style.color = "#721c24";
                     statusDiv.style.backgroundColor = "#f8d7da";
                     statusDiv.style.border = "1px solid #f5c6cb";
-                    aplicarFlashTela('flash-vermelho');
                 }
             } else {
                 statusDiv.innerHTML = "⚠️ Insira o horário completo (Ex: 12:30)!";
@@ -282,3 +259,12 @@
                 statusDiv.style.border = "none";
             }
         });
+
+        function resgatarBotaoNao() {
+            btnNao.style.left = 'auto';
+            btnNao.style.top = 'auto';
+            btnNao.style.right = '40px';
+        }
+    </script>
+</body>
+</html>
