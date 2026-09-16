@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Já pode ao mossar?</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; background: #f4f4f9; }
+        h1 { font-size: 2.5rem; color: #333; }
+        button { font-size: 1.5rem; padding: 15px 30px; margin: 20px; cursor: pointer; border: none; border-radius: 8px; color: white; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        .sim { background-color: #28a745; }
+        .nao { background-color: #dc3545; }
+        #status { margin-top: 20px; font-size: 1.2rem; color: #666; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Já pode ao mossar?</h1>
+    <button class="sim" onclick="enviar('SIM')">Sim</button>
+    <button class="nao" onclick="enviar('NAO')">Não</button>
+    <div id="status"></div>
+
+    <script>
+        const socket = io();
+        function enviar(resposta) {
+            socket.emit('resposta', resposta);
+            document.getElementById('status').innerText = "Resposta \"" + resposta + "\" enviada!";
+        }
+    </script>
+</body>
+</html>
