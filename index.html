@@ -242,14 +242,29 @@
             resgatarBotaoNao();
         });
 
+        // Clique no botão Não com 10% de chance de funcionar
         btnNao.addEventListener('click', (e) => {
             e.preventDefault();
-            socket.emit('resposta', 'NAO');
-            statusDiv.innerHTML = "😭 ❌ FOME CANCELADA! DEU RUIM... 💔🫠";
-            statusDiv.style.color = "#721c24";
-            statusDiv.style.backgroundColor = "#f8d7da";
-            statusDiv.style.border = "1px solid #f5c6cb";
-            resgatarBotaoNao();
+            
+            // Sorteia um número de 1 a 100
+            const chance = Math.random() * 100;
+            
+            if (chance <= 10) {
+                // Deu sorte (10% de chance): Funciona de verdade!
+                socket.emit('resposta', 'NAO');
+                statusDiv.innerHTML = "😭 ❌ FOME CANCELADA! DEU RUIM... 💔🫠";
+                statusDiv.style.color = "#721c24";
+                statusDiv.style.backgroundColor = "#f8d7da";
+                statusDiv.style.border = "1px solid #f5c6cb";
+                resgatarBotaoNao();
+            } else {
+                // 90% das vezes: o botão foge/muda de lugar e avisa que falhou
+                fugirDoAmigo(e);
+                statusDiv.innerHTML = "⚠️ O botão de não falhou! Tente de novo (se conseguir) 🏃‍♂️💨";
+                statusDiv.style.color = "#856404";
+                statusDiv.style.backgroundColor = "#fff3cd";
+                statusDiv.style.border = "1px solid #ffeeba";
+            }
         });
 
         btnHora.addEventListener('click', () => {
