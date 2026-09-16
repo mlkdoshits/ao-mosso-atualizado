@@ -10,10 +10,11 @@
             font-family: 'Segoe UI', Arial, sans-serif; 
             text-align: center; 
             margin: 0;
-            padding: 20px 20px; 
+            padding: 40px 20px; 
             background: #f5f7fa; 
             min-height: 100vh;
             box-sizing: border-box;
+            user-select: none;
             overflow-x: hidden;
         }
 
@@ -110,30 +111,14 @@
 
         #status { 
             margin-top: 20px; 
-            font-size: 1.4rem; 
+            font-size: 1.3rem; 
             color: #222; 
             font-weight: bold;
             min-height: 30px;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        /* CONFIGURAÇÃO DAS PARTÍCULAS NATIVAS EM CSS */
-        .particula {
-            position: fixed;
-            pointer-events: none;
-            z-index: 999;
-            border-radius: 2px;
-        }
-
-        @keyframes voarConfete {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-110vh) rotate(720deg); opacity: 0; }
-        }
-
-        @keyframes cairCarinha {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(110vh) rotate(-180deg); opacity: 0; }
+            padding: 12px;
+            border-radius: 12px;
+            background: transparent;
+            transition: all 0.2s ease;
         }
     </style>
 </head>
@@ -224,43 +209,13 @@
         btnNao.addEventListener('pointerdown', fugirDoAmigo);
         btnNao.addEventListener('touchstart', fugirDoAmigo);
 
-        // FUNÇÃO SUPER LEVE DE ANIMAÇÃO NATIVA
-        function dispararEfeitoNativo(modo) {
-            const cores = ['#28a745', '#ffc107', '#007bff', '#e83e8c', '#fd7e14'];
-            const carinhas = ['😭', '😢', '🫠', '💔', '❌'];
-            
-            for (let i = 0; i < 20; i++) {
-                setTimeout(() => {
-                    const p = document.createElement('div');
-                    p.classList.add('particula');
-                    p.style.left = Math.random() * 100 + 'vw';
-                    
-                    if (modo === 'SIM') {
-                        // Fabrica pequenos confetes quadrados coloridos subindo
-                        p.style.width = (Math.random() * 6 + 6) + 'px';
-                        p.style.height = (Math.random() * 10 + 6) + 'px';
-                        p.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
-                        p.style.bottom = '-20px';
-                        p.style.animation = 'voarConfete ' + (Math.random() * 1 + 1) + 's ease-out forwards';
-                    } else {
-                        // Fabrica carinhas tristes caindo
-                        p.innerText = carinhas[Math.floor(Math.random() * carinhas.length)];
-                        p.style.fontSize = (Math.random() * 1 + 1.5) + 'rem';
-                        p.style.top = '-40px';
-                        p.style.animation = 'cairCarinha ' + (Math.random() * 1 + 1.2) + 's linear forwards';
-                    }
-                    
-                    document.body.appendChild(p);
-                    setTimeout(() => p.remove(), 2200);
-                }, i * 30);
-            }
-        }
-
+        // CLIQUE SEGURO: Apenas altera o texto da caixinha interna, com zero animação na tela
         btnSim.addEventListener('click', () => {
             socket.emit('resposta', 'SIM');
             statusDiv.innerHTML = "🎉 🥳 SÓ VAI! AO MOSSAR LIBERADO! 🍟🍕🍔";
-            statusDiv.style.color = "#28a745";
-            dispararEfeitoNativo('SIM');
+            statusDiv.style.color = "#155724";
+            statusDiv.style.backgroundColor = "#d4edda";
+            statusDiv.style.border = "1px solid #c3e6cb";
             resgatarBotaoNao();
         });
 
@@ -268,8 +223,9 @@
             e.preventDefault();
             socket.emit('resposta', 'NAO');
             statusDiv.innerHTML = "😭 ❌ FOME CANCELADA! DEU RUIM... 💔🫠";
-            statusDiv.style.color = "#dc3545";
-            dispararEfeitoNativo('NAO');
+            statusDiv.style.color = "#721c24";
+            statusDiv.style.backgroundColor = "#f8d7da";
+            statusDiv.style.border = "1px solid #f5c6cb";
             resgatarBotaoNao();
         });
 
@@ -278,7 +234,24 @@
             if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
                 statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
-                statusDiv.style.color = "#ff9f43";
-                dispararEfeitoNativo('SIM'); // Solta confetes leves na hora também
+                statusDiv.style.color = "#856404";
+                statusDiv.style.backgroundColor = "#fff3cd";
+                statusDiv.style.border = "1px solid #ffeeba";
                 horarioInput.value = '';
                 resgatarBotaoNao();
+            } else {
+                statusDiv.innerHTML = "⚠️ Insira o horário completo (Ex: 12:30)!";
+                statusDiv.style.color = "#333";
+                statusDiv.style.backgroundColor = "transparent";
+                statusDiv.style.border = "none";
+            }
+        });
+
+        function resgatarBotaoNao() {
+            btnNao.style.left = 'auto';
+            btnNao.style.top = 'auto';
+            btnNao.style.right = '40px';
+        }
+    </script>
+</body>
+</html>
