@@ -5,23 +5,132 @@
     <title>Painel - Respostas</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; background: #111; color: #fff; }
-        h1 { font-size: 2rem; color: #aaa; }
-        #resposta-atual { font-size: 6rem; margin-top: 50px; font-weight: bold; letter-spacing: 2px; }
-        .SIM { color: #28a745; text-shadow: 0 0 20px rgba(40, 167, 69, 0.5); }
-        .NAO { color: #dc3545; text-shadow: 0 0 20px rgba(220, 53, 69, 0.5); }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            text-align: center; 
+            margin: 0;
+            padding-top: 120px; 
+            background-color: #0d0e12; 
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        h1 { 
+            font-size: 2rem; 
+            color: #4f5666; 
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        #resposta-container {
+            display: inline-block;
+            margin-top: 60px;
+        }
+        #resposta-atual { 
+            font-size: 8rem; 
+            font-weight: 900; 
+            letter-spacing: 4px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        /* Efeitos de Neon e Animação de Entrada */
+        .SIM { 
+            color: #2ecc71; 
+            text-shadow: 0 0 30px rgba(46, 204, 113, 0.8), 0 0 60px rgba(46, 204, 113, 0.4);
+            animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .NAO { 
+            color: #e74c3c; 
+            text-shadow: 0 0 30px rgba(231, 76, 60, 0.8), 0 0 60px rgba(231, 76, 60, 0.4);
+            animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        #aviso-som {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        @keyframes impacto {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
-    <h1>Aguardando resposta em tempo real...</h1>
-    <div id="resposta-atual">NENHUMA RESPOSTA</div>
+    <h1>Painel de Almoço Ao Vivo</h1>
+    <div id="resposta-container">
+        <div id="resposta-atual">Aguardando...</div>
+    </div>
+    
+    <div id="aviso-som">🔊 Clique em qualquer lugar da tela uma vez para ativar o som</div>
 
     <script>
         const socket = io();
+        
+        // Criando o sintetizador de som do próprio navegador (assim não precisamos de arquivos externos de áudio)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function tocarSomNotificacao(tipo) {
+            try {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                // Configura um som agudo e alegre para o SIM, e um mais grave/alerta para o NÃO
+                if (tipo === 'SIM') {
+                    oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota Ré5
+                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);  // Nota Lá5
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                } else {
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    oscillator.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.25);
+                }
+            } catch (e) {
+                console.log("Áudio bloqueado pelo navegador. Clique na tela para desbloquear.");
+            }
+        }
+
         socket.on('nova-resposta', (resposta) => {
             const div = document.getElementById('resposta-atual');
+            
+            // Remove a classe antiga para reiniciar a animação de impacto
+            div.className = '';
+            
+            // Força o navegador a resetar a animação
+            void div.offsetWidth; 
+            
+            // Atualiza o texto e aplica as novas animações/cores
             div.innerText = resposta;
             div.className = resposta;
+            
+            // Ativa o som
+            tocarSomNotificacao(resposta);
+        });
+
+        // Desbloqueia o sistema de áudio quando você clica no painel
+        document.body.addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            document.getElementById('aviso-som').style.display = 'none';
         });
     </script>
 </body>
