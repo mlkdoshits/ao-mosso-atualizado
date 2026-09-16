@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Painel - Ao Mosso</title>
     <script src="/socket.io/socket.io.js"></script>
-    <!-- Biblioteca de confetes inclusa no painel -->
     <script src="https://jsdelivr.net"></script>
     <style>
         body { 
@@ -69,7 +68,7 @@
         .animacao-impacto { animation: impacto 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         #aviso-som {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 20px; left: 50%; transform: translateX-%50%);
             background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; color: #888;
         }
 
@@ -108,6 +107,7 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function festaDeConfete() {
+            if (typeof confetti !== 'function') return;
             const duracao = 2 * 1000;
             const fim = Date.now() + duracao;
 
@@ -123,6 +123,7 @@
 
         function tocarSom(tipo) {
             try {
+                if (audioCtx.state === 'suspended') return;
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 oscillator.connect(gainNode);
@@ -169,9 +170,9 @@
                 document.body.classList.add('fundo-sim');
                 txtResposta.innerText = "SÓ VAI! 🎉";
                 txtResposta.style.color = "#2ecc71";
-                txtMeme.innerText = "LARGUE TUDO E VÁ AO MOSSAR! 跑🏃‍♂️💨🍔";
+                txtMeme.innerText = "LARGUE TUDO E VÁ AO MOSSAR! 🏃‍♂️💨🍔";
                 tocarSom('SIM');
-                festaDeConfete(); // Ativa os tiros de papel picado no seu monitor
+                festaDeConfete();
             } 
             else if (data === 'NAO') {
                 contNao++;
@@ -181,8 +182,6 @@
                 txtResposta.style.color = "#e74c3c";
                 txtMeme.innerText = "Fique na cadeira. Fome de ao mossar cancelada temporariamente. 🥲💻";
                 tocarSom('NAO');
-                
-                // Para o pisca de alerta vermelho depois de 2 segundos para não cansar as vistas
                 setTimeout(() => document.body.style.backgroundColor = '#450a0a', 2000);
             } 
             else if (data.startsWith('HORARIO:')) {
@@ -197,7 +196,8 @@
 
         document.body.addEventListener('click', () => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            document.getElementById('aviso-som').style.display = 'none';
+            const aviso = document.getElementById('aviso-som');
+            if (aviso) aviso.style.display = 'none';
         });
     </script>
 </body>
