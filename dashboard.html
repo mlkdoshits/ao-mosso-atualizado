@@ -1,4 +1,133 @@
-const socket = io();
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel - Já pode ao mossar?</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 40px 20px;
+            background: #111;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.5s ease;
+        }
+
+        .dashboard-card {
+            background: #222;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .placar-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .placar-box {
+            background: #333;
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid #444;
+            min-width: 120px;
+        }
+
+        .placar-box h3 { margin: 0 0 5px 0; color: #aaa; font-size: 0.9rem; text-transform: uppercase; }
+        .placar-box span { font-size: 2rem; font-weight: bold; }
+        #qtd-sim { color: #2ecc71; }
+        #qtd-nao { color: #e74c3c; }
+
+        .status-box {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px dashed #444;
+            margin-top: 20px;
+        }
+
+        #resposta-atual {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #f1c40f;
+        }
+
+        #meme-espaco {
+            font-size: 1.3rem;
+            color: #bbb;
+            margin-top: 15px;
+        }
+
+        #aviso-som {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        /* Efeitos visuais para o fundo ao receber alertas */
+        .fundo-sim { background-color: #064e3b !important; }
+        .fundo-nao { background-color: #7f1d1d !important; }
+        .fundo-hora { background-color: #78350f !important; }
+
+        @keyframes impacto {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animacao-impacto {
+            animation: impacto 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-card">
+        <h1>📊 Painel Ao Mosso</h1>
+
+        <div class="placar-container">
+            <div class="placar-box">
+                <h3>Liberados 👍</h3>
+                <span id="qtd-sim">0</span>
+            </div>
+            <div class="placar-box">
+                <h3>Negados 👎</h3>
+                <span id="qtd-nao">0</span>
+            </div>
+        </div>
+
+        <div class="status-box" id="conteudo-dinamico">
+            <p style="margin: 0; color: #888; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Última Interação</p>
+            <div id="resposta-atual">Aguardando votos...</div>
+            <div id="meme-espaco">O painel está ativo e sincronizado.</div>
+        </div>
+
+        <div id="aviso-som">🔊 Clique em qualquer lugar desta tela para ativar os alertas sonoros!</div>
+    </div>
+
+    <script>
+        const socket = io();
         
         // Recebe o placar sincronizado do servidor ao carregar ou atualizar
         socket.on('atualizar-placar', (placar) => {
@@ -59,7 +188,7 @@ const socket = io();
             const divDinamica = document.getElementById('conteudo-dinamico');
             
             document.body.className = '';
-            divDinamica.className = '';
+            divDinamica.className = 'status-box';
             void divDinamica.offsetWidth;
             divDinamica.classList.add('animacao-impacto');
 
@@ -76,10 +205,6 @@ const socket = io();
                 txtResposta.style.color = "#e74c3c";
                 txtMeme.innerText = "Fique na cadeira. Fome de ao mossar cancelada temporariamente. 🥲💻";
                 tocarSom('NAO');
-                setTimeout(() => {
-                    document.body.className = '';
-                    document.body.style.backgroundColor = '#450a0a';
-                }, 2000);
             } 
             else if (data.startsWith('HORARIO:')) {
                 const horaSugerida = data.replace('HORARIO:', '');
@@ -96,3 +221,6 @@ const socket = io();
             const aviso = document.getElementById('aviso-som');
             if (aviso) aviso.style.display = 'none';
         });
+    </script>
+</body>
+</html>
