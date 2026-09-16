@@ -2,29 +2,90 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Já pode ao mossar?</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; background: #f4f4f9; }
-        h1 { font-size: 2.5rem; color: #333; }
-        button { font-size: 1.5rem; padding: 15px 30px; margin: 20px; cursor: pointer; border: none; border-radius: 8px; color: white; transition: 0.2s; }
-        button:active { transform: scale(0.95); }
-        .sim { background-color: #28a745; }
-        .nao { background-color: #dc3545; }
-        #status { margin-top: 20px; font-size: 1.2rem; color: #666; font-weight: bold; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            text-align: center; 
+            margin: 0;
+            padding-top: 100px; 
+            background: radial-gradient(circle, #f9f9fc 0%, #e4e7eb 100%); 
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        h1 { 
+            font-size: 2.8rem; 
+            color: #222; 
+            margin-bottom: 40px;
+            animation: flutuar 3s ease-in-out infinite;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        button { 
+            font-size: 1.8rem; 
+            padding: 20px 40px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 50px; 
+            color: white; 
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+        }
+        button:active { 
+            transform: translateY(2px) scale(0.95); 
+        }
+        .sim { background: linear-gradient(135deg, #28a745, #218838); }
+        .nao { background: linear-gradient(135deg, #dc3545, #c82333); }
+        
+        #status { 
+            margin-top: 40px; 
+            font-size: 1.4rem; 
+            color: #444; 
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .show-status { opacity: 1 !important; animation: piscar 0.5s ease; }
+
+        @keyframes flutuar {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes piscar {
+            0% { transform: scale(0.8); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
     <h1>Já pode ao mossar?</h1>
-    <button class="sim" onclick="enviar('SIM')">Sim</button>
-    <button class="nao" onclick="enviar('NAO')">Não</button>
+    <div class="btn-container">
+        <button class="sim" onclick="enviar('SIM')">Sim 👍</button>
+        <button class="nao" onclick="enviar('NAO')">Não 👎</button>
+    </div>
     <div id="status"></div>
 
     <script>
         const socket = io();
         function enviar(resposta) {
             socket.emit('resposta', resposta);
-            document.getElementById('status').innerText = "Resposta \"" + resposta + "\" enviada!";
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = "Resposta \"" + resposta + "\" enviada!";
+            statusDiv.classList.add('show-status');
+            
+            // Remove o efeito para poder repetir a animação se clicar de novo
+            setTimeout(() => statusDiv.classList.remove('show-status'), 2000);
         }
     </script>
 </body>
