@@ -10,7 +10,7 @@
             font-family: 'Segoe UI', Arial, sans-serif; 
             text-align: center; 
             margin: 0;
-            padding: 40px 20px; 
+            padding: 20px 20px; 
             background: #f5f7fa; 
             min-height: 100vh;
             box-sizing: border-box;
@@ -36,18 +36,23 @@
 
         .card {
             background: white;
-            padding: 40px 30px;
+            padding: 30px 30px;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             max-width: 500px;
             margin: 0 auto;
             position: relative;
         }
-        h1 { 
-            font-size: 2.5rem; 
-            color: #333; 
-            margin-bottom: 30px;
+        
+        /* ESTILO DA IMAGEM DO CACHORRINHO */
+        .meme-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
+
         .btn-container {
             display: flex;
             justify-content: center;
@@ -121,7 +126,8 @@
     </div>
 
     <div class="card" id="site-card">
-        <h1>Já pode ao mossar? 🍽️</h1>
+        <!-- IMAGEM DO MEME ADICIONADA AQUI -->
+        <img src="cachorro.png" alt="Meme ao mosso" class="meme-img">
         
         <div class="btn-container" id="area-botoes">
             <div style="position: absolute; left: 40px;">
