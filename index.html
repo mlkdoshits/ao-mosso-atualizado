@@ -10,13 +10,32 @@
             font-family: 'Segoe UI', Arial, sans-serif; 
             text-align: center; 
             margin: 0;
-            padding: 60px 20px; 
+            padding: 40px 20px; 
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
             min-height: 100vh;
             box-sizing: border-box;
             user-select: none;
             overflow-x: hidden;
         }
+
+        .placar-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .placar-box {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            min-width: 100px;
+        }
+        .placar-box h3 { margin: 0 0 5px 0; color: #777; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;}
+        .placar-box span { font-size: 1.6rem; font-weight: bold; }
+        #qtd-sim { color: #28a745; }
+        #qtd-nao { color: #dc3545; }
+
         .card {
             background: white;
             padding: 40px 30px;
@@ -94,7 +113,6 @@
             min-height: 24px;
         }
 
-        /* ANIMAÇÃO DO CARD (Pulo elástico) */
         .celebrar {
             animation: puloFesta 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -104,7 +122,6 @@
             100% { transform: scale(1); }
         }
 
-        /* ANIMAÇÃO DO NÃO (Terremoto) */
         .tremer {
             animation: terremoto 0.1s ease-in-out infinite;
         }
@@ -116,22 +133,40 @@
             80% { transform: translate(7px, 3px); }
         }
 
-        /* Efeito de queda das lágrimas/emojis tristes */
+        /* Animação unificada e super leve para Emojis */
         .emoji-voando {
             position: fixed;
-            top: -50px;
             font-size: 2.5rem;
-            animation: cairNativo 1.8s linear forwards;
             pointer-events: none;
             z-index: 999;
         }
-        @keyframes cairNativo {
+        
+        /* Emojis do SIM sobem voando */
+        @keyframes subirFesta {
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(115vh) rotate(360deg); opacity: 0; }
+            100% { transform: translateY(-115vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Emojis do NÃO caem chorando */
+        @keyframes cairTriste {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(115vh) rotate(-360deg); opacity: 0; }
         }
     </style>
 </head>
 <body>
+
+    <div class="placar-container">
+        <div class="placar-box">
+            <h3>Liberados 👍</h3>
+            <span id="qtd-sim">0</span>
+        </div>
+        <div class="placar-box">
+            <h3>Negados 👎</h3>
+            <span id="qtd-nao">0</span>
+        </div>
+    </div>
+
     <div class="card" id="site-card">
         <h1>Já pode ao mossar? 🍽️</h1>
         
@@ -160,10 +195,18 @@
         const horarioInput = document.getElementById('horario-input');
         const card = document.getElementById('site-card');
 
-        // Carrega o script de confetes em segundo plano sem travar a inicialização do site
-        const scriptConfetti = document.createElement('script');
-        scriptConfetti.src = "https://jsdelivr.net";
-        document.head.appendChild(scriptConfetti);
+        let contSim = 0;
+        let contNao = 0;
+
+        socket.on('nova-resposta', (data) => {
+            if (data === 'SIM') {
+                contSim++;
+                document.getElementById('qtd-sim').innerText = contSim;
+            } else if (data === 'NAO') {
+                contNao++;
+                document.getElementById('qtd-nao').innerText = contNao;
+            }
+        });
 
         horarioInput.addEventListener('input', (e) => {
             let valor = e.target.value.replace(/\D/g, "");
@@ -198,15 +241,24 @@
             enviar('NAO');
         });
 
-        function chuveiroTriste() {
-            const emojis = ['😭', '😢', '❌', '💔', '🫠'];
+        // GERADOR DE EMOJIS SEM SCRIPTS EXTERNOS (Super leve)
+        function chuvaDeEmojis(listaEmojis, tipo) {
             for (let i = 0; i < 25; i++) {
                 setTimeout(() => {
                     const e = document.createElement('div');
                     e.classList.add('emoji-voando');
-                    e.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    e.innerText = listaEmojis[Math.floor(Math.random() * listaEmojis.length)];
                     e.style.left = Math.random() * 100 + 'vw';
-                    e.style.animationDuration = (Math.random() * 1.2 + 0.8) + 's';
+                    e.style.fontSize = (Math.random() * 1.5 + 1.5) + 'rem';
+                    
+                    if (tipo === 'SUBIR') {
+                        e.style.bottom = '-50px';
+                        e.style.animation = 'subirFesta ' + (Math.random() * 1 + 1) + 's cubic-bezier(0.1, 0.8, 0.3, 1) forwards';
+                    } else {
+                        e.style.top = '-50px';
+                        e.style.animation = 'cairTriste ' + (Math.random() * 1.2 + 0.8) + 's linear forwards';
+                    }
+                    
                     document.body.appendChild(e);
                     setTimeout(() => e.remove(), 2000);
                 }, i * 40);
@@ -218,18 +270,12 @@
             document.getElementById('status').innerText = "Você respondeu: " + resposta;
             
             card.classList.remove('celebrar', 'tremer');
-            void card.offsetWidth; // Reseta animações
+            void card.offsetWidth;
             
             if (resposta === 'SIM') {
                 card.classList.add('celebrar');
-                // Dispara os confetes tradicionais usando a biblioteca de forma segura
-                if (typeof confetti === 'function') {
-                    confetti({
-                        particleCount: 150,
-                        spread: 80,
-                        origin: { y: 0.6 }
-                    });
-                }
+                // Ativa a animação de emojis felizes decolando de baixo para cima
+                chuvaDeEmojis(['🎉', '🥳', '🍟', '🍕', '🍔', '🍗', '✨'], 'SUBIR');
             } else {
                 card.classList.add('tremer');
                 chuveiroTriste();
@@ -238,32 +284,4 @@
             resgatarBotaoNao();
         }
 
-        function enviarHorario() {
-            const hora = horarioInput.value.trim();
-            if(hora.length === 5) {
-                socket.emit('resposta', 'HORARIO:' + hora);
-                document.getElementById('status').innerText = "Horário do ao mosso enviado!";
-                
-                card.classList.remove('celebrar', 'tremer');
-                void card.offsetWidth;
-                card.classList.add('celebrar');
-                
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 60, spread: 40, colors: ['#ff9f43', '#ffffff'] });
-                }
-                
-                horarioInput.value = '';
-                resgatarBotaoNao();
-            } else {
-                document.getElementById('status').innerText = "Insira o horário completo (Ex: 12:30)!";
-            }
-        }
-
-        function resgatarBotaoNao() {
-            btnNao.style.left = 'auto';
-            btnNao.style.top = 'auto';
-            btnNao.style.right = '40px';
-        }
-    </script>
-</body>
-</html>
+        function chuveiroTriste() {
