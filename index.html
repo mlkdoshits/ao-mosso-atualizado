@@ -59,13 +59,15 @@
             color: #333; 
             margin-bottom: 30px;
         }
+        
+        /* Aumentado o espaço para o texto de status caber debaixo dos botões */
         .btn-container {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 30px;
             margin-bottom: 30px;
-            height: 110px; 
+            height: 180px; 
             position: relative;
         }
         button { 
@@ -84,9 +86,26 @@
             background: #dc3545; 
             position: absolute;
             right: 40px; 
+            top: 15px; /* Alinhado no topo da área do botão Sim */
             touch-action: none;
         }
         
+        /* Posiciona o texto do status logo abaixo dos botões de Sim e Não */
+        #status { 
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            font-size: 1.3rem; 
+            color: #222; 
+            font-weight: bold;
+            min-height: 30px;
+            padding: 12px;
+            border-radius: 12px;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
         .sugestao-container {
             border-top: 1px solid #eee;
             padding-top: 25px;
@@ -108,18 +127,6 @@
             font-weight: bold;
         }
         .btn-relogio { background: #ff9f43; font-size: 1.1rem; padding: 12px 20px; }
-
-        #status { 
-            margin-top: 20px; 
-            font-size: 1.3rem; 
-            color: #222; 
-            font-weight: bold;
-            min-height: 30px;
-            padding: 12px;
-            border-radius: 12px;
-            background: transparent;
-            transition: all 0.2s ease;
-        }
     </style>
 </head>
 <body>
@@ -141,10 +148,13 @@
         <h1>Loló, já pode ao mossar? 🍽️</h1>
         
         <div class="btn-container" id="area-botoes">
-            <div style="position: absolute; left: 40px;">
+            <div style="position: absolute; left: 40px; top: 15px;">
                 <button class="sim" id="btn-sim-clique">Sim 👍</button>
             </div>
             <button class="nao" id="btn-nao">Não 👎</button>
+            
+            <!-- MUDANÇA: Caixa de status movida para dentro do container dos botões -->
+            <div id="status"></div>
         </div>
 
         <div class="sugestao-container">
@@ -154,8 +164,6 @@
                 <button class="btn-relogio" id="btn-hora-clique">Sugerir Horário do Ao Mosso ⏰</button>
             </div>
         </div>
-
-        <div id="status"></div>
     </div>
 
     <script>
@@ -200,6 +208,11 @@
                 novoX = 160 + (Math.random() * (larguraContainer - 160));
             }
             
+            // Limitando a fuga vertical para o botão não descer por cima do texto de status
+            if (novoY > 60) {
+                novoY = Math.random() * 60;
+            }
+            
             btnNao.style.right = 'auto';
             btnNao.style.left = novoX + 'px';
             btnNao.style.top = novoY + 'px';
@@ -232,12 +245,10 @@
             const hora = horarioInput.value.trim();
             
             if(hora.length === 5) {
-                // Separa a string em hora e minuto (Ex: '12:30' vira partes '12' e '30')
                 const partes = hora.split(':');
                 const h = parseInt(partes[0], 10);
                 const m = parseInt(partes[1], 10);
 
-                // VALIDAÇÃO DE HORÁRIO REAL (Horas de 0 a 23, Minutos de 0 a 59)
                 if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
                     socket.emit('resposta', 'HORARIO:' + hora);
                     statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
@@ -262,7 +273,7 @@
 
         function resgatarBotaoNao() {
             btnNao.style.left = 'auto';
-            btnNao.style.top = 'auto';
+            btnNao.style.top = '15px';
             btnNao.style.right = '40px';
         }
     </script>
