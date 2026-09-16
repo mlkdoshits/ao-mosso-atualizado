@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Já pode ao mossar?</title>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://jsdelivr.net"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
@@ -94,6 +93,7 @@
             min-height: 24px;
         }
 
+        /* Animação de Terremoto Nativa (Sem scripts pesados) */
         .tremer {
             animation: terremoto 0.1s ease-in-out infinite;
         }
@@ -105,6 +105,7 @@
             80% { transform: translate(7px, 3px); }
         }
 
+        /* Efeito de queda de emojis tristes em CSS */
         .emoji-queda {
             position: fixed;
             top: -50px;
@@ -182,16 +183,16 @@
 
         function chuveiroTriste() {
             const emojis = ['😭', '😢', '❌', '💔', '🫠'];
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 20; i++) {
                 setTimeout(() => {
                     const e = document.createElement('div');
                     e.classList.add('emoji-queda');
                     e.innerText = emojis[Math.floor(Math.random() * emojis.length)];
                     e.style.left = Math.random() * 100 + 'vw';
-                    e.style.animationDuration = (Math.random() * 1.5 + 1) + 's';
+                    e.style.animationDuration = (Math.random() * 1.2 + 0.8) + 's';
                     document.body.appendChild(e);
-                    setTimeout(() => e.remove(), 2500);
-                }, i * 50);
+                    setTimeout(() => e.remove(), 2000);
+                }, i * 60);
             }
         }
 
@@ -199,11 +200,7 @@
             socket.emit('resposta', resposta);
             document.getElementById('status').innerText = "Você respondeu: " + resposta;
             
-            if (resposta === 'SIM') {
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                }
-            } else {
+            if (resposta !== 'SIM' && resposta !== 'HORA') {
                 card.classList.add('tremer');
                 chuveiroTriste();
                 setTimeout(() => card.classList.remove('tremer'), 1000);
@@ -216,9 +213,6 @@
             if(hora.length === 5) {
                 socket.emit('resposta', 'HORARIO:' + hora);
                 document.getElementById('status').innerText = "Horário do ao mosso enviado!";
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 50, spread: 40, colors: ['#ff9f43'] });
-                }
                 horarioInput.value = '';
                 resgatarBotaoNao();
             } else {
