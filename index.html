@@ -60,6 +60,7 @@
             max-width: 420px;
             position: relative;
             box-sizing: border-box;
+            margin-bottom: 16px;
         }
         
         .img-container {
@@ -231,58 +232,29 @@
             border: 1px solid var(--card-border);
             border-radius: 20px;
             padding: 16px 20px;
-            margin-top: 16px;
             width: 100%;
             max-width: 420px;
             box-sizing: border-box;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 12px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04);
         }
 
-        .widget-info {
-            text-align: left;
-        }
-
-        .widget-title {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 2px;
-        }
-
-        .widget-status {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
         .widget-btn {
-            background: var(--accent-blue);
+            background: var(--accent-green);
             color: white;
             border: none;
             border-radius: 12px;
-            padding: 10px 16px;
-            font-size: 0.85rem;
+            padding: 12px 16px;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.2);
-            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
-
         .widget-btn:hover {
-            background: var(--accent-blue-hover);
-        }
-
-        .widget-btn:active {
-            transform: scale(0.95);
+            background: #059669;
         }
     </style>
 </head>
@@ -322,15 +294,10 @@
         </div>
     </div>
 
-    <!-- WIDGET DE ACESSO RÁPIDO INTERNO -->
+    <!-- BOTÃO PARA CRIAR O WIDGET DIRETAMENTE NA TELA INICIAL -->
     <div class="quick-widget">
-        <div class="widget-info">
-            <span class="widget-title">Atalho Rápido</span>
-            <span class="widget-status" id="widget-status-text">Liberado agora?</span>
-        </div>
-        <button class="widget-btn" id="btn-widget-liberar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Liberar
+        <button class="widget-btn" id="btn-criar-widget" onclick="sugerirFixarWidget()">
+            📱 Adicionar Widget à Tela Inicial
         </button>
     </div>
 
@@ -342,11 +309,7 @@
         const areaBotoes = document.getElementById('area-botoes');
         const horarioInput = document.getElementById('horario-input');
         const statusDiv = document.getElementById('status');
-        
-        const btnWidgetLiberar = document.getElementById('btn-widget-liberar');
-        const widgetStatusText = document.getElementById('widget-status-text');
 
-        // Carregar placar local prévio
         if (localStorage.getItem('ao_mosso_sim') !== null) {
             document.getElementById('qtd-sim').innerText = localStorage.getItem('ao_mosso_sim');
         }
@@ -361,16 +324,21 @@
             document.getElementById('qtd-nao').innerText = placar.nao;
         });
 
-        // ==========================================
-        // DETETO SE O APP FOI ABERTO PELO WIDGET NATIVO (PASSO 6)
-        // ==========================================
+        // Função para acionar o widget nativo no Android
+        function sugerirFixarWidget() {
+            if (window.Android && typeof window.Android.solicitarCriacaoWidget === 'function') {
+                window.Android.solicitarCriacaoWidget();
+            } else {
+                alert("Esta função só está disponível no aplicativo Android instalado.");
+            }
+        }
+
+        // Detetar abertura via widget
         window.addEventListener('DOMContentLoaded', () => {
-            const parametros = window.location.search;
-            if (parametros.includes("liberar") || sessionStorage.getItem('liberar_via_widget') === 'true') {
-                sessionStorage.removeItem('liberar_via_widget');
+            if (window.location.search.includes("liberar")) {
                 setTimeout(() => {
                     socket.emit('resposta', 'SIM');
-                    statusDiv.innerHTML = "🎉 LIBERADO VIA WIDGET NATIVO!";
+                    statusDiv.innerHTML = "🎉 LIBERADO VIA WIDGET!";
                     statusDiv.style.color = "#059669";
                     statusDiv.style.background = "#ecfdf5";
                     statusDiv.style.borderColor = "#a7f3d0";
@@ -390,10 +358,8 @@
             if(evento) evento.preventDefault();
             const larguraContainer = areaBotoes.offsetWidth - btnNao.offsetWidth;
             const alturaContainer = areaBotoes.offsetHeight - btnNao.offsetHeight;
-            
             let novoX = Math.random() * larguraContainer;
             let novoY = Math.random() * (alturaContainer + 20);
-            
             btnNao.style.right = 'auto';
             btnNao.style.left = Math.max(0, novoX) + 'px';
             btnNao.style.top = Math.max(-10, novoY) + 'px';
@@ -415,17 +381,16 @@
         btnNao.addEventListener('click', (e) => {
             e.preventDefault();
             const chance = Math.random() * 100;
-            
             if (chance <= 10) {
                 socket.emit('resposta', 'NAO');
-                statusDiv.innerHTML = "😭 FOME CANCELADA! Deu ruim...";
+                statusDiv.innerHTML = "😭 FOME CANCELADA!";
                 statusDiv.style.color = "#dc2626";
                 statusDiv.style.background = "#fef2f2";
                 statusDiv.style.borderColor = "#fecaca";
                 resgatarBotaoNao();
             } else {
                 fugirDoAmigo(e);
-                statusDiv.innerHTML = "⚠️ O botão fugiu! Tente de novo 🏃‍♂️";
+                statusDiv.innerHTML = "⚠️ O botão fugiu! 🏃‍♂️";
                 statusDiv.style.color = "#d97706";
                 statusDiv.style.background = "#fffbeb";
                 statusDiv.style.borderColor = "#fde68a";
@@ -434,44 +399,17 @@
 
         btnHora.addEventListener('click', () => {
             const hora = horarioInput.value.trim();
-            
             if(hora.length === 5) {
-                const partes = hora.split(':');
-                const h = parseInt(partes[0], 10);
-                const m = parseInt(partes[1], 10);
-
-                if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-                    socket.emit('resposta', 'HORARIO:' + hora);
-                    statusDiv.innerHTML = "⏰ Marcado para às " + hora + "!";
-                    statusDiv.style.color = "#d97706";
-                    statusDiv.style.background = "#fffbeb";
-                    statusDiv.style.borderColor = "#fde68a";
-                    horarioInput.value = '';
-                    resgatarBotaoNao();
-                } else {
-                    statusDiv.innerHTML = "⚠️ Insira um horário válido!";
-                    statusDiv.style.color = "#dc2626";
-                }
+                socket.emit('resposta', 'HORARIO:' + hora);
+                statusDiv.innerHTML = "⏰ Marcado para às " + hora + "!";
+                statusDiv.style.color = "#d97706";
+                statusDiv.style.background = "#fffbeb";
+                statusDiv.style.borderColor = "#fde68a";
+                horarioInput.value = '';
+                resgatarBotaoNao();
             } else {
                 statusDiv.innerHTML = "⚠️ Formato incompleto (Ex: 12:30)";
-                statusDiv.style.color = "var(--text-muted)";
             }
-        });
-
-        btnWidgetLiberar.addEventListener('click', () => {
-            socket.emit('resposta', 'SIM');
-            widgetStatusText.innerText = "Liberado com sucesso! 🎉";
-            widgetStatusText.style.color = "#059669";
-            
-            statusDiv.innerHTML = "🎉 SÓ VAI! AO MOSSAR LIBERADO (Via Widget Interno)!";
-            statusDiv.style.color = "#059669";
-            statusDiv.style.background = "#ecfdf5";
-            statusDiv.style.borderColor = "#a7f3d0";
-            
-            setTimeout(() => {
-                widgetStatusText.innerText = "Liberado agora?";
-                widgetStatusText.style.color = "var(--text-main)";
-            }, 3000);
         });
 
         function resgatarBotaoNao() {
