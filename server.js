@@ -1,5 +1,5 @@
 const express = require('express');
-const http = require('http');
+const http = http = require('http');
 const { Server } = require('socket.io');
 const https = require('https');
 
@@ -7,13 +7,11 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Configuração do Telegram (use o seu Token e Chat ID existentes)
-const TELEGRAM_BOT_TOKEN = 'SEU_TOKEN_AQUI';
-const TELEGRAM_CHAT_ID = 'SEU_CHAT_ID_AQUI';
+// Suas credenciais do Telegram configuradas
+const TELEGRAM_BOT_TOKEN = '8718522847:AAGV1HaW3wf2R11vYP-I3zm9unAg3J0y-7Y';
+const TELEGRAM_CHAT_ID = '8524528778';
 
 function enviarMensagemTelegram(texto) {
-    if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'SEU_TOKEN_AQUI') return;
-    
     const dados = JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
         text: texto,
