@@ -1,14 +1,50 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const path = require('path');
+const https = require('https');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Servir arquivos estáticos da pasta atual ou 'www' (ajuste se usar Capacitor)
-app.use(express.static(path.join(__dirname, '.')));
+// Configuração do Telegram (use o seu Token e Chat ID existentes)
+const TELEGRAM_BOT_TOKEN = 'SEU_TOKEN_AQUI';
+const TELEGRAM_CHAT_ID = 'SEU_CHAT_ID_AQUI';
+
+function enviarMensagemTelegram(texto) {
+    if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === 'SEU_TOKEN_AQUI') return;
+    
+    const dados = JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: texto,
+        parse_mode: 'Markdown'
+    });
+
+    const opcoes = {
+        hostname: 'api.telegram.org',
+        port: 443,
+        path: `/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': dados.length
+        }
+    };
+
+    const req = https.request(opcoes, (res) => {
+        // Mensagem enviada com sucesso para o Telegram
+    });
+
+    req.on('error', (erro) => {
+        console.error('Erro no Telegram:', erro);
+    });
+
+    req.write(dados);
+    req.end();
+}
+
+// Servir arquivos estáticos (como o index.html, imagens, etc.)
+app.use(express.static('public'));
 
 let placar = {
     sim: 0,
@@ -16,32 +52,32 @@ let placar = {
 };
 
 io.on('connection', (socket) => {
-    console.log('Um utilizador conectou-se:', socket.id);
-
-    // Envia o placar atual assim que o cliente conecta
+    // Envia o placar atual assim que alguém se conecta
     socket.emit('atualizar-placar', placar);
 
-    // Recebe respostas do cliente
-    socket.on('resposta', (tipo) => {
-        if (tipo === 'SIM') {
+    socket.on('resposta', (escolha) => {
+        if (escolha === 'SIM') {
             placar.sim++;
-        } else if (tipo === 'NAO') {
+            io.emit('atualizar-placar', placar);
+            
+            // Dispara a mensagem no Telegram quando liberado
+            enviarMensagemTelegram("🚨🍽️ *ATENÇÃO PESSOAL!* Já pode ao mossar! Liberado com sucesso! 🎉");
+        } 
+        else if (escolha === 'NAO') {
             placar.nao++;
-        } else if (tipo.startsWith('HORARIO:')) {
-            // Aqui pode tratar horários personalizados se quiser guardar no backend
-            placar.sim++;
+            io.emit('atualizar-placar', placar);
         }
-
-        // Transmite o placar atualizado para todos os conectados
-        io.emit('atualizar-placar', placar);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Utilizador desconectado:', socket.id);
+        else if (typeof escolha === 'string' && escolha.startsWith('HORARIO:')) {
+            const horario = escolha.split(':')[1];
+            io.emit('atualizar-placar', placar);
+            
+            // Dispara mensagem personalizada no Telegram com o horário sugerido
+            enviarMensagemTelegram(`⏰ *Novo horário sugerido para o ao mosso:* ${horario}! 🍽️`);
+        }
     });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Servidor a correr na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
