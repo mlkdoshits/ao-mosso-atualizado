@@ -22,14 +22,15 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-color: #f7f5f0; /* Tom creme/areia bem claro da referência */
+            --card-bg: #ffffff;
+            --card-border: rgba(0, 0, 0, 0.04);
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent-blue: #0052ff; /* Azul elegante do site de referência */
+            --accent-blue-hover: #0040cc;
             --accent-green: #10b981;
-            --accent-red: #f43f5e;
-            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
         }
 
         body { 
@@ -51,12 +52,10 @@
 
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--card-border);
-            padding: 28px 20px;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            padding: 32px 24px;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.06);
             width: 100%;
             max-width: 420px;
             position: relative;
@@ -65,13 +64,13 @@
         
         .img-container {
             position: relative;
-            width: 130px;
-            height: 130px;
+            width: 120px;
+            height: 120px;
             margin: 0 auto 20px auto;
             border-radius: 50%;
-            padding: 4px;
-            background: linear-gradient(135deg, var(--accent-orange), var(--accent-green));
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            padding: 3px;
+            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
         }
 
         .meme-img {
@@ -79,7 +78,7 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            background: #1e293b;
+            background: #ffffff;
         }
 
         .placar-container {
@@ -90,10 +89,10 @@
         }
         
         .placar-box {
-            background: rgba(15, 23, 42, 0.5);
+            background: #fafaf9;
             padding: 14px 10px;
             border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.03);
             text-align: center;
         }
         
@@ -115,10 +114,10 @@
 
         h1 { 
             font-size: 1.5rem; 
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-main); 
-            margin: 0 0 24px 0;
-            letter-spacing: -0.02em;
+            margin: 0 0 20px 0;
+            letter-spacing: -0.03em;
         }
         
         .btn-container {
@@ -126,21 +125,21 @@
             justify-content: center;
             align-items: center;
             gap: 16px;
-            margin-bottom: 24px;
-            height: 100px; 
+            margin-bottom: 20px;
+            height: 90px; 
             position: relative;
         }
 
         button { 
-            font-size: 1rem; 
-            padding: 12px 24px; 
+            font-size: 0.95rem; 
+            padding: 12px 20px; 
             cursor: pointer; 
             border: none; 
             border-radius: 14px; 
             color: white; 
             font-weight: 600;
-            transition: transform 0.1s ease, filter 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.15);
         }
 
         button:active {
@@ -148,28 +147,32 @@
         }
 
         .sim { 
-            background: var(--accent-green); 
+            background: var(--accent-blue); 
             width: 48%;
+        }
+        .sim:hover {
+            background: var(--accent-blue-hover);
         }
         
         .nao { 
-            background: var(--accent-red); 
+            background: #374151; 
             position: absolute;
             right: 0; 
             top: 0;
             width: 48%;
             touch-action: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         #status { 
-            font-size: 0.9rem; 
+            font-size: 0.85rem; 
             color: var(--text-muted); 
             font-weight: 500;
-            min-height: 40px;
+            min-height: 38px;
             padding: 10px 14px;
             border-radius: 12px;
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: #fafaf9;
+            border: 1px solid rgba(0, 0, 0, 0.03);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -178,7 +181,7 @@
         }
 
         .sugestao-container {
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: 1px solid #f3f4f6;
             padding-top: 20px;
         }
 
@@ -196,8 +199,8 @@
         input {
             padding: 10px 14px;
             font-size: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #e5e7eb;
+            background: #fafaf9;
             color: var(--text-main);
             border-radius: 12px;
             width: 100px;
@@ -208,15 +211,19 @@
         }
 
         input:focus {
-            border-color: var(--accent-orange);
+            border-color: var(--accent-blue);
         }
 
         .btn-relogio { 
-            background: var(--accent-orange); 
+            background: var(--accent-blue); 
             font-size: 0.9rem; 
             padding: 10px 16px; 
             flex: 1;
             border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.15);
+        }
+        .btn-relogio:hover {
+            background: var(--accent-blue-hover);
         }
     </style>
 </head>
@@ -307,9 +314,9 @@
         btnSim.addEventListener('click', () => {
             socket.emit('resposta', 'SIM');
             statusDiv.innerHTML = "🎉 SÓ VAI! AO MOSSAR LIBERADO!";
-            statusDiv.style.color = "var(--accent-green)";
-            statusDiv.style.background = "rgba(16, 185, 129, 0.1)";
-            statusDiv.style.borderColor = "rgba(16, 185, 129, 0.2)";
+            statusDiv.style.color = "#059669";
+            statusDiv.style.background = "#ecfdf5";
+            statusDiv.style.borderColor = "#a7f3d0";
             resgatarBotaoNao();
         });
 
@@ -320,16 +327,16 @@
             if (chance <= 10) {
                 socket.emit('resposta', 'NAO');
                 statusDiv.innerHTML = "😭 FOME CANCELADA! Deu ruim...";
-                statusDiv.style.color = "var(--accent-red)";
-                statusDiv.style.background = "rgba(244, 63, 94, 0.1)";
-                statusDiv.style.borderColor = "rgba(244, 63, 94, 0.2)";
+                statusDiv.style.color = "#dc2626";
+                statusDiv.style.background = "#fef2f2";
+                statusDiv.style.borderColor = "#fecaca";
                 resgatarBotaoNao();
             } else {
                 fugirDoAmigo(e);
                 statusDiv.innerHTML = "⚠️ O botão fugiu! Tente de novo 🏃‍♂️";
-                statusDiv.style.color = "var(--accent-orange)";
-                statusDiv.style.background = "rgba(245, 158, 11, 0.1)";
-                statusDiv.style.borderColor = "rgba(245, 158, 11, 0.2)";
+                statusDiv.style.color = "#d97706";
+                statusDiv.style.background = "#fffbeb";
+                statusDiv.style.borderColor = "#fde68a";
             }
         });
 
@@ -344,14 +351,14 @@
                 if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
                     socket.emit('resposta', 'HORARIO:' + hora);
                     statusDiv.innerHTML = "⏰ Marcado para às " + hora + "!";
-                    statusDiv.style.color = "var(--accent-orange)";
-                    statusDiv.style.background = "rgba(245, 158, 11, 0.1)";
-                    statusDiv.style.borderColor = "rgba(245, 158, 11, 0.2)";
+                    statusDiv.style.color = "#d97706";
+                    statusDiv.style.background = "#fffbeb";
+                    statusDiv.style.borderColor = "#fde68a";
                     horarioInput.value = '';
                     resgatarBotaoNao();
                 } else {
                     statusDiv.innerHTML = "⚠️ Insira um horário válido!";
-                    statusDiv.style.color = "var(--accent-red)";
+                    statusDiv.style.color = "#dc2626";
                 }
             } else {
                 statusDiv.innerHTML = "⚠️ Formato incompleto (Ex: 12:30)";
