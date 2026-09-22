@@ -2,73 +2,46 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const fetch = require('node-fetch');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Configurações do Telegram
-const TELEGRAM_BOT_TOKEN = '8718522847:AAGV1HaW3wf2R11vYP-I3zm9unAg3J0y-7Y';
-const TELEGRAM_CHAT_ID = '8524528778';
+// Servir arquivos estáticos da pasta atual ou 'www' (ajuste se usar Capacitor)
+app.use(express.static(path.join(__dirname, '.')));
 
-// Contadores globais salvos no servidor
-let contSim = 0;
-let contNao = 0;
-
-// Função para enviar avisos no Telegram
-async function enviarAvisoTelegram(texto) {
-    try {
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: texto,
-                parse_mode: 'Markdown'
-            })
-        });
-    } catch (erro) {
-        console.error('Erro ao enviar mensagem para o Telegram:', erro);
-    }
-}
-
-// Configura o servidor para ler arquivos soltos na raiz
-app.use(express.static(__dirname));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
+let placar = {
+    sim: 0,
+    nao: 0
+};
 
 io.on('connection', (socket) => {
-  // Envia o placar atual imediatamente para quem acabou de se conectar/atualizar a página
-  socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
+    console.log('Um utilizador conectou-se:', socket.id);
 
-  socket.on('resposta', (data) => {
-    // Atualiza os contadores no servidor baseando-se na resposta
-    if (data === 'SIM') {
-        contSim++;
-        enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
-    } else if (data === 'NAO') {
-        contNao++;
-        enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n❌ Uma alma corajosa conseguiu acertar os 10% de chance e negou o ao mosso! 🥲");
-    } else if (data.startsWith('HORARIO:')) {
-        const hora = data.replace('HORARIO:', '');
-        enviarAvisoTelegram(`⏰ *Sugestão de Horário:* Marcaram o compromisso oficial do ao mosso para às *${hora}*! ✨`);
-    }
+    // Envia o placar atual assim que o cliente conecta
+    socket.emit('atualizar-placar', placar);
 
-    // Transmite a nova resposta e o placar atualizado para TODOS os dispositivos conectados
-    io.emit('nova-resposta', data);
-    io.emit('atualizar-placar', { sim: contSim, nao: contNao });
-  });
+    // Recebe respostas do cliente
+    socket.on('resposta', (tipo) => {
+        if (tipo === 'SIM') {
+            placar.sim++;
+        } else if (tipo === 'NAO') {
+            placar.nao++;
+        } else if (tipo.startsWith('HORARIO:')) {
+            // Aqui pode tratar horários personalizados se quiser guardar no backend
+            placar.sim++;
+        }
+
+        // Transmite o placar atualizado para todos os conectados
+        io.emit('atualizar-placar', placar);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Utilizador desconectado:', socket.id);
+    });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor a correr na porta ${PORT}`);
 });
