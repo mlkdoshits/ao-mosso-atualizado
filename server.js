@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const https = require('https');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -41,8 +42,8 @@ function enviarMensagemTelegram(texto) {
     req.end();
 }
 
-// Servir arquivos estáticos (como o index.html, imagens, etc.)
-app.use(express.static('public'));
+// Servir arquivos estáticos corretamente da raiz do projeto
+app.use(express.static(path.join(__dirname)));
 
 let placar = {
     sim: 0,
