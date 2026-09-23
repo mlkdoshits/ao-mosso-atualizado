@@ -1,82 +1,74 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const https = require('https');
 const path = require('path');
+const fetch = require('node-fetch');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Suas credenciais do Telegram configuradas
+// Configurações do Telegram
 const TELEGRAM_BOT_TOKEN = '8718522847:AAGV1HaW3wf2R11vYP-I3zm9unAg3J0y-7Y';
 const TELEGRAM_CHAT_ID = '8524528778';
 
-function enviarMensagemTelegram(texto) {
-    const dados = JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text: texto,
-        parse_mode: 'Markdown'
-    });
+// Contadores globais salvos no servidor
+let contSim = 0;
+let contNao = 0;
 
-    const opcoes = {
-        hostname: 'api.telegram.org',
-        port: 443,
-        path: `/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': dados.length
-        }
-    };
-
-    const req = https.request(opcoes, (res) => {
-        // Mensagem enviada com sucesso para o Telegram
-    });
-
-    req.on('error', (erro) => {
-        console.error('Erro no Telegram:', erro);
-    });
-
-    req.write(dados);
-    req.end();
+// Função para enviar avisos no Telegram
+async function enviarAvisoTelegram(texto) {
+    try {
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: texto,
+                parse_mode: 'Markdown'
+            })
+        });
+    } catch (erro) {
+        console.error('Erro ao enviar mensagem para o Telegram:', erro);
+    }
 }
 
-// Servir arquivos estáticos corretamente da raiz do projeto
-app.use(express.static(path.join(__dirname)));
+// Configura o servidor para ler arquivos soltos na raiz
+app.use(express.static(__dirname));
 
-let placar = {
-    sim: 0,
-    nao: 0
-};
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
 
 io.on('connection', (socket) => {
-    // Envia o placar atual assim que alguém se conecta
-    socket.emit('atualizar-placar', placar);
+  // Envia o placar atual imediatamente para quem acabou de se conectar/atualizar a página
+  socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
 
-    socket.on('resposta', (escolha) => {
-        if (escolha === 'SIM') {
-            placar.sim++;
-            io.emit('atualizar-placar', placar);
-            
-            // Dispara a mensagem no Telegram quando liberado
-            enviarMensagemTelegram("🚨🍽️ *ATENÇÃO PESSOAL!* Já pode ao mossar! Liberado com sucesso! 🎉");
-        } 
-        else if (escolha === 'NAO') {
-            placar.nao++;
-            io.emit('atualizar-placar', placar);
-        }
-        else if (typeof escolha === 'string' && escolha.startsWith('HORARIO:')) {
-            const horario = escolha.split(':')[1];
-            io.emit('atualizar-placar', placar);
-            
-            // Dispara mensagem personalizada no Telegram com o horário sugerido
-            enviarMensagemTelegram(`⏰ *Novo horário sugerido para o ao mosso:* ${horario}! 🍽️`);
-        }
-    });
+  socket.on('resposta', (data) => {
+    // Atualiza os contadores no servidor baseando-se na resposta
+    if (data === 'SIM') {
+        contSim++;
+        enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
+    } else if (data === 'NAO') {
+        contNao++;
+        enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n❌ Uma alma corajosa conseguiu acertar os 10% de chance e negou o ao mosso! 🥲");
+    } else if (data.startsWith('HORARIO:')) {
+        const hora = data.replace('HORARIO:', '');
+        enviarAvisoTelegram(`⏰ *Sugestão de Horário:* Marcaram o compromisso oficial do ao mosso para às *${hora}*! ✨`);
+    }
+
+    // Transmite a nova resposta e o placar atualizado para TODOS os dispositivos conectados
+    io.emit('nova-resposta', data);
+    io.emit('atualizar-placar', { sim: contSim, nao: contNao });
+  });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
