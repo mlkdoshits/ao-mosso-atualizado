@@ -3,127 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sidemed - Dashboard</title>
+    <title>Painel - Já pode ao mossar?</title>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
-        :root {
-            --bg-color: #f7f5f0;
-            --card-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --text-muted: #666666;
-            --primary-blue: #0052ff;
-            --primary-hover: #003eb3;
-            --radius: 16px;
-        }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            text-align: center;
             margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-        }
-
-        .nav-back {
-            display: inline-block;
-            color: var(--primary-blue);
-            text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-
-        .sidemed-card {
-            background-color: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-            margin-bottom: 16px;
-            border: 1px solid rgba(0, 0, 0, 0.04);
-        }
-
-        .profile-header {
+            padding: 40px 20px;
+            background: #111;
+            color: white;
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 16px;
+            transition: background-color 0.5s ease;
         }
 
-        .profile-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            background-color: #e0e0e0;
+        .dashboard-card {
+            background: #222;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid #333;
         }
 
-        .profile-info h2 {
-            margin: 0 0 4px 0;
-            font-size: 18px;
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #fff;
         }
 
-        .profile-info p {
-            margin: 0;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        .info-row {
+        .placar-container {
             display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
         }
 
-        .info-row:last-child {
-            border-bottom: none;
+        .placar-box {
+            background: #333;
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid #444;
+            min-width: 120px;
         }
 
-        .info-label {
-            color: var(--text-muted);
+        .placar-box h3 { margin: 0 0 5px 0; color: #aaa; font-size: 0.9rem; text-transform: uppercase; }
+        .placar-box span { font-size: 2rem; font-weight: bold; }
+        #qtd-sim { color: #2ecc71; }
+        #qtd-nao { color: #e74c3c; }
+
+        .status-box {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px dashed #444;
+            margin-top: 20px;
         }
 
-        .info-value {
-            font-weight: 600;
-            color: var(--text-main);
+        #resposta-atual {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #f1c40f;
+        }
+
+        #meme-espaco {
+            font-size: 1.3rem;
+            color: #bbb;
+            margin-top: 15px;
+        }
+
+        #aviso-som {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        /* Efeitos visuais para o fundo ao receber alertas */
+        .fundo-sim { background-color: #064e3b !important; }
+        .fundo-nao { background-color: #7f1d1d !important; }
+        .fundo-hora { background-color: #78350f !important; }
+
+        @keyframes impacto {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animacao-impacto {
+            animation: impacto 0.4s ease;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <a href="index.html" class="nav-back">← Voltar ao Início</a>
+    <div class="dashboard-card">
+        <h1>📊 Painel Ao Mosso</h1>
 
-        <div class="sidemed-card">
-            <div class="profile-header">
-                <img src="cachorro.png" alt="Perfil" class="profile-avatar">
-                <div class="profile-info">
-                    <h2>Marina A. Costa</h2>
-                    <p>Passaporte 100% completo</p>
-                </div>
+        <div class="placar-container">
+            <div class="placar-box">
+                <h3>Liberados 👍</h3>
+                <span id="qtd-sim">0</span>
+            </div>
+            <div class="placar-box">
+                <h3>Negados 👎</h3>
+                <span id="qtd-nao">0</span>
             </div>
         </div>
 
-        <div class="sidemed-card">
-            <h3 style="margin-top: 0; font-size: 16px;">Dados de Saúde</h3>
-            <div class="info-row">
-                <span class="info-label">Tipo Sanguíneo</span>
-                <span class="info-value">O+</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Nascimento</span>
-                <span class="info-value">14/03/1994</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Alergias</span>
-                <span class="info-value" style="color: #e53935;">Nenhuma registrada</span>
-            </div>
+        <div class="status-box" id="conteudo-dinamico">
+            <p style="margin: 0; color: #888; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Última Interação</p>
+            <div id="resposta-atual">Aguardando votos...</div>
+            <div id="meme-espaco">O painel está ativo e sincronizado.</div>
         </div>
+
+        <div id="aviso-som">🔊 Clique em qualquer lugar desta tela para ativar os alertas sonoros!</div>
     </div>
 
+    <script>
+        const socket = io();
+        
+        // Carrega instantaneamente o último valor salvo no navegador antes do F5
+        if (localStorage.getItem('ao_mosso_sim') !== null) {
+            document.getElementById('qtd-sim').innerText = localStorage.getItem('ao_mosso_sim');
+        }
+        if (localStorage.getItem('ao_mosso_nao') !== null) {
+            document.getElementById('qtd-nao').innerText = localStorage.getItem('ao_mosso_nao');
+        }
+
+        // Recebe o placar sincronizado do servidor ao carregar ou atualizar
+        socket.on('atualizar-placar', (placar) => {
+            localStorage.setItem('ao_mosso_sim', placar.sim);
+            localStorage.setItem('ao_mosso_nao', placar.nao);
+
+            document.getElementById('qtd-sim').innerText = placar.sim;
+            document.getElementById('qtd-nao').innerText = placar.nao;
+        });
+
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx || audioCtx.state === 'closed') {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function tocarSom(tipo) {
+            try {
+                const ctx = getAudioContext();
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                if (tipo === 'SIM') {
+                    oscillator.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                    oscillator.start(); oscillator.stop(ctx.currentTime + 0.4);
+                } else if (tipo === 'NAO') {
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(220, ctx.currentTime);
+                    oscillator.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    oscillator.start(); oscillator.stop(ctx.currentTime + 0.35);
+                } else {
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+                    oscillator.frequency.setValueAtTime(554.37, ctx.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    oscillator.start(); oscillator.stop(ctx.currentTime + 0.3);
+                }
+            } catch (e) {
+                console.error("Erro ao reproduzir som:", e);
+            }
+        }
+
+        socket.on('nova-resposta', (data) => {
+            const txtResposta = document.getElementById('resposta-atual');
+            const txtMeme = document.getElementById('meme-espaco');
+            const divDinamica = document.getElementById('conteudo-dinamico');
+            
+            document.body.className = '';
+            divDinamica.className = 'status-box';
+            void divDinamica.offsetWidth;
+            divDinamica.classList.add('animacao-impacto');
+
+            if (data === 'SIM') {
+                document.body.classList.add('fundo-sim');
+                txtResposta.innerText = "SÓ VAI! 🎉";
+                txtResposta.style.color = "#2ecc71";
+                txtMeme.innerText = "LARGUE TUDO E VÁ AO MOSSAR! 🏃‍♂️💨🍔";
+                tocarSom('SIM');
+            } 
+            else if (data === 'NAO') {
+                document.body.classList.add('fundo-nao');
+                txtResposta.innerText = "NÃO PODE... ❌";
+                txtResposta.style.color = "#e74c3c";
+                txtMeme.innerText = "Fique na cadeira. Fome de ao mossar cancelada temporariamente. 🥲💻";
+                tocarSom('NAO');
+            } 
+            else if (data.startsWith('HORARIO:')) {
+                const horaSugerida = data.replace('HORARIO:', '');
+                document.body.classList.add('fundo-hora');
+                txtResposta.innerText = horaSugerida + " ⏰";
+                txtResposta.style.color = "#ff9f43";
+                txtMeme.innerText = "Agendaram o compromisso oficial do ao mosso!";
+                tocarSom('HORA');
+            }
+        });
+
+        document.body.addEventListener('click', () => {
+            getAudioContext();
+            const aviso = document.getElementById('aviso-som');
+            if (aviso) aviso.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
