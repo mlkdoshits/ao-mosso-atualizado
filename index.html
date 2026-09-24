@@ -1,306 +1,129 @@
-<html lang="pt-BR"><head>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Já pode ao mossar?</title>
-
-    <!-- METATAGS PARA PRÉVIA DO LINK (WHATSAPP / REDES SOCIAIS) -->
-    <meta property="og:title" content="Já pode ao mossar? 🍽️">
-    <meta property="og:description" content="Descubra se já está liberado o horário do ao mosso ou mande a sua sugestão!">
-    <meta property="og:image" content="https://ja-pode-ao-mossar.onrender.com/cachorro.png">
-    <meta property="og:url" content="https://ja-pode-ao-mossar.onrender.com/">
-    <meta property="og:type" content="website">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Já pode ao mossar? 🍽️">
-    <meta name="twitter:description" content="Descubra se já está liberado o horário do ao mosso!">
-    <meta name="twitter:image" content="https://ja-pode-ao-mossar.onrender.com/cachorro.png">
-
-    <script src="/socket.io/socket.io.js"></script>
+    <title>Sidemed - App</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            text-align: center; 
+        :root {
+            --bg-color: #f7f5f0;        /* Bege claro / off-white do site Sidemed */
+            --card-bg: #ffffff;         /* Branco puro para os cards */
+            --text-main: #1a1a1a;       /* Texto escuro principal */
+            --text-muted: #666666;      /* Texto secundário */
+            --primary-blue: #0052ff;    /* Azul vibrante dos botões */
+            --primary-hover: #003eb3;
+            --radius: 16px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 40px 20px; 
-            background: #f5f7fa; 
-            min-height: 100vh;
-            box-sizing: border-box;
-            user-select: none;
-            overflow-x: hidden;
+            padding: 20px;
         }
 
-        .card {
-            background: white;
-            padding: 30px 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            max-width: 500px;
+        .container {
+            max-width: 480px;
             margin: 0 auto;
-            position: relative;
-        }
-        
-        .meme-img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
-        .placar-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        .placar-box {
-            background: #f9fbfd;
-            padding: 10px 20px;
-            border-radius: 12px;
-            border: 1px solid #eee;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            min-width: 100px;
-        }
-        .placar-box h3 { margin: 0 0 5px 0; color: #777; font-size: 0.8rem; text-transform: uppercase; }
-        .placar-box span { font-size: 1.6rem; font-weight: bold; }
-        #qtd-sim { color: #28a745; }
-        #qtd-nao { color: #dc3545; }
-
-        h1 { 
-            font-size: 2.3rem; 
-            color: #333; 
-            margin-bottom: 30px;
-        }
-        
-        .btn-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
-            margin-bottom: 30px;
-            height: 180px; 
-            position: relative;
-        }
-        button { 
-            font-size: 1.5rem; 
-            padding: 15px 35px; 
-            cursor: pointer; 
-            border: none; 
-            border-radius: 50px; 
-            color: white; 
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-        .sim { background: #28a745; }
-        
-        .nao { 
-            background: #dc3545; 
-            position: absolute;
-            right: 40px; 
-            top: 15px;
-            touch-action: none;
-        }
-        
-        #status { 
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            font-size: 1.3rem; 
-            color: #222; 
-            font-weight: bold;
-            min-height: 30px;
-            padding: 12px;
-            border-radius: 12px;
-            background: transparent;
-            transition: all 0.2s ease;
-        }
-
-        .sugestao-container {
-            border-top: 1px solid #eee;
-            padding-top: 25px;
-            margin-top: 20px;
-        }
-        p { color: #666; font-size: 1.1rem; margin-bottom: 15px; }
-        .input-group {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        input {
-            padding: 12px;
-            font-size: 1.1rem;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            width: 140px;
+        .header {
             text-align: center;
-            font-weight: bold;
+            margin-bottom: 24px;
         }
-        .btn-relogio { background: #ff9f43; font-size: 1.1rem; padding: 12px 20px; }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .sidemed-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .sidemed-card h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: var(--text-main);
+        }
+
+        .sidemed-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .btn-sidemed {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.2);
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            margin-top: 12px;
+        }
+
+        .btn-sidemed:active {
+            background-color: var(--primary-hover);
+        }
     </style>
 </head>
 <body>
 
-    <div class="card" id="site-card">
-        <img src="cachorro.png" alt="Meme ao mosso" class="meme-img">
-        
-        <div class="placar-container">
-            <div class="placar-box">
-                <h3>Liberados 👍</h3>
-                <span id="qtd-sim">0</span>
-            </div>
-            <div class="placar-box">
-                <h3>Negados 👎</h3>
-                <span id="qtd-nao">0</span>
-            </div>
-        </div>
-        
-        <h1>Loló, já pode ao mossar? 🍽️</h1>
-        
-        <div class="btn-container" id="area-botoes">
-            <div style="position: absolute; left: 40px; top: 15px;">
-                <button class="sim" id="btn-sim-clique">Sim 👍</button>
-            </div>
-            <button class="nao" id="btn-nao">Não 👎</button>
-            
-            <div id="status"></div>
+    <div class="container">
+        <div class="header">
+            <h1>sidemed.</h1>
+            <p>Seu histórico de saúde sempre com você.</p>
         </div>
 
-        <div class="sugestao-container">
-            <p>Se não der para ao mossar agora, que horas vai ser o ao mosso?</p>
-            <div class="input-group">
-                <input type="text" id="horario-input" placeholder="00:00" maxlength="5">
-                <button class="btn-relogio" id="btn-hora-clique">Sugerir Horário do Ao Mosso ⏰</button>
-            </div>
+        <div class="sidemed-card">
+            <h3>Painel de Acesso Rápido</h3>
+            <p>Organize suas informações médicas, exames e dados essenciais em segundos.</p>
+            <a href="dashboard.html" class="btn-sidemed">Acessar Dashboard</a>
+        </div>
+
+        <!-- Cartão com o Botão Funcional para Adicionar Widget -->
+        <div class="sidemed-card">
+            <h3>Atalho na Tela Inicial</h3>
+            <p>Fixe um widget inteligente diretamente na tela inicial do seu celular para acesso instantâneo.</p>
+            <button class="btn-sidemed" onclick="adicionarWidget()">
+                ➕ Adicionar Widget
+            </button>
         </div>
     </div>
 
     <script>
-        const socket = io();
-        const btnSim = document.getElementById('btn-sim-clique');
-        const btnNao = document.getElementById('btn-nao');
-        const btnHora = document.getElementById('btn-hora-clique');
-        const areaBotoes = document.getElementById('area-botoes');
-        const horarioInput = document.getElementById('horario-input');
-        const statusDiv = document.getElementById('status');
-
-        // Carrega instantaneamente o último valor salvo no navegador antes do F5
-        if (localStorage.getItem('ao_mosso_sim') !== null) {
-            document.getElementById('qtd-sim').innerText = localStorage.getItem('ao_mosso_sim');
-        }
-        if (localStorage.getItem('ao_mosso_nao') !== null) {
-            document.getElementById('qtd-nao').innerText = localStorage.getItem('ao_mosso_nao');
-        }
-
-        // Recebe o placar sincronizado do servidor ao conectar ou atualizar
-        socket.on('atualizar-placar', (placar) => {
-            localStorage.setItem('ao_mosso_sim', placar.sim);
-            localStorage.setItem('ao_mosso_nao', placar.nao);
-
-            document.getElementById('qtd-sim').innerText = placar.sim;
-            document.getElementById('qtd-nao').innerText = placar.nao;
-        });
-
-        horarioInput.addEventListener('input', (e) => {
-            let valor = e.target.value.replace(/\D/g, "");
-            if (valor.length > 2) {
-                valor = valor.substring(0, 2) + ":" + valor.substring(2, 4);
-            }
-            e.target.value = valor;
-        });
-
-        function fugirDoAmigo(evento) {
-            if(evento) evento.preventDefault();
-            const larguraContainer = areaBotoes.offsetWidth - btnNao.offsetWidth;
-            const alturaContainer = areaBotoes.offsetHeight - btnNao.offsetHeight;
-            
-            let novoX = Math.random() * larguraContainer;
-            let novoY = Math.random() * alturaContainer;
-            
-            if (novoX < 160) {
-                novoX = 160 + (Math.random() * (larguraContainer - 160));
-            }
-            
-            if (novoY > 60) {
-                novoY = Math.random() * 60;
-            }
-            
-            btnNao.style.right = 'auto';
-            btnNao.style.left = novoX + 'px';
-            btnNao.style.top = novoY + 'px';
-        }
-
-        btnNao.addEventListener('mouseover', fugirDoAmigo);
-        btnNao.addEventListener('pointerdown', fugirDoAmigo);
-        btnNao.addEventListener('touchstart', fugirDoAmigo);
-
-        btnSim.addEventListener('click', () => {
-            socket.emit('resposta', 'SIM');
-            statusDiv.innerHTML = "🎉 🥳 SÓ VAI! AO MOSSAR LIBERADO! 🍟🍕🍔";
-            statusDiv.style.color = "#155724";
-            statusDiv.style.backgroundColor = "#d4edda";
-            statusDiv.style.border = "1px solid #c3e6cb";
-            resgatarBotaoNao();
-        });
-
-        btnNao.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            const chance = Math.random() * 100;
-            
-            if (chance <= 10) {
-                socket.emit('resposta', 'NAO');
-                statusDiv.innerHTML = "😭 ❌ FOME CANCELADA! DEU RUIM... 💔🫠";
-                statusDiv.style.color = "#721c24";
-                statusDiv.style.backgroundColor = "#f8d7da";
-                statusDiv.style.border = "1px solid #f5c6cb";
-                resgatarBotaoNao();
+        function adicionarWidget() {
+            // Comunicação via Bridge com o código nativo Java (MainActivity)
+            if (window.Android && typeof window.Android.solicitarCriacaoWidget === 'function') {
+                window.Android.solicitarCriacaoWidget();
             } else {
-                fugirDoAmigo(e);
-                statusDiv.innerHTML = "⚠️ O botão de não falhou! Tente de novo (se conseguir) 🏃&zwj;♂️💨";
-                statusDiv.style.color = "#856404";
-                statusDiv.style.backgroundColor = "#fff3cd";
-                statusDiv.style.border = "1px solid #ffeeba";
+                alert("O recurso de widget está disponível apenas no aplicativo Android instalado.");
             }
-        });
-
-        btnHora.addEventListener('click', () => {
-            const hora = horarioInput.value.trim();
-            
-            if(hora.length === 5) {
-                const partes = hora.split(':');
-                const h = parseInt(partes[0], 10);
-                const m = parseInt(partes[1], 10);
-
-                if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-                    socket.emit('resposta', 'HORARIO:' + hora);
-                    statusDiv.innerHTML = "⏰ Horário marcado para às " + hora + "! ✨";
-                    statusDiv.style.color = "#856404";
-                    statusDiv.style.backgroundColor = "#fff3cd";
-                    statusDiv.style.border = "1px solid #ffeeba";
-                    horarioInput.value = '';
-                    resgatarBotaoNao();
-                } else {
-                    statusDiv.innerHTML = "⚠️ Loló, insira um horário que exista de verdade!";
-                    statusDiv.style.color = "#721c24";
-                    statusDiv.style.backgroundColor = "#f8d7da";
-                    statusDiv.style.border = "1px solid #f5c6cb";
-                }
-            } else {
-                statusDiv.innerHTML = "⚠️ Insira o horário completo (Ex: 12:30)!";
-                statusDiv.style.color = "#333";
-                statusDiv.style.backgroundColor = "transparent";
-                statusDiv.style.border = "none";
-            }
-        });
-
-        function resgatarBotaoNao() {
-            btnNao.style.left = 'auto';
-            btnNao.style.top = '15px';
-            btnNao.style.right = '40px';
         }
     </script>
-
-
-</body></html>
+</body>
+</html>
