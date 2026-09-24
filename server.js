@@ -51,7 +51,7 @@ app.get('/dashboard', (req, res) => {
 // NOVA ROTA POST: O Widget do Android vai chamar este endpoint!
 app.post('/api/votar-sim', (req, res) => {
     contSim++;
-    enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via Widget)!* \n🎉 Alguém votou pelo Widget que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
+    enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via widget)!* \n🎉 Alguém votou pelo widget que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
 
     // Atualiza todos os navegadores abertos no site em tempo real via Socket.IO
     io.emit('nova-resposta', 'SIM');
