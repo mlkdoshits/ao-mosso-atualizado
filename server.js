@@ -8,6 +8,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// IMPORTANTE: Necessário para o servidor ler o JSON enviado pelo Widget do Android
+app.use(express.json());
+
 // Configurações do Telegram
 const TELEGRAM_BOT_TOKEN = '8718522847:AAGV1HaW3wf2R11vYP-I3zm9unAg3J0y-7Y';
 const TELEGRAM_CHAT_ID = '8524528778';
@@ -43,6 +46,19 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// NOVA ROTA POST: O Widget do Android vai chamar este endpoint!
+app.post('/api/votar-sim', (req, res) => {
+    contSim++;
+    enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via Widget)!* \n🎉 Alguém votou pelo telemóvel que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
+
+    // Atualiza todos os navegadores abertos no site em tempo real via Socket.IO
+    io.emit('nova-resposta', 'SIM');
+    io.emit('atualizar-placar', { sim: contSim, nao: contNao });
+
+    console.log(`Voto via Widget contabilizado! Total SIM: ${contSim}`);
+    res.status(200).json({ success: true, total: contSim });
 });
 
 io.on('connection', (socket) => {
