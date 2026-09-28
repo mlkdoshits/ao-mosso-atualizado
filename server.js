@@ -5,11 +5,17 @@ const path = require('path');
 const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 
-// Inicializa o Firebase Admin usando as variáveis de ambiente ou o ficheiro de credenciais
-// Dica: No Render, pode configurar as credenciais como variável de ambiente ou enviar o ficheiro JSON
-const serviceAccount = require('./firebase-service-account.json'); 
+// Inicializa o Firebase Admin usando a variável de ambiente segura configurada no Render
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+    // Fallback para desenvolvimento local (se tiver o ficheiro na máquina)
+    serviceAccount = require('./firebase-service-account.json');
+}
+
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount)
 });
 
 const app = express();
@@ -103,9 +109,6 @@ io.on('connection', (socket) => {
     if (data === 'SIM') {
         contSim++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
-        
-        // Exemplo: Se quiser disparar a notificação automática ou deixar totalmente manual, 
-        // pode chamar dispararNotificacaoAgradecimento() aqui se preferir automatizar no futuro.
     } else if (data === 'NAO') {
         contNao++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n❌ Uma alma corajosa conseguiu acertar os 10% de chance e negou o ao mosso! 🥲");
