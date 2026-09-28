@@ -6,16 +6,20 @@ const admin = require('firebase-admin');
 
 // Inicializa o Firebase Admin usando a variável de ambiente segura configurada no Render
 let serviceAccount;
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-} else {
-    // Fallback para desenvolvimento local (se tiver o ficheiro na máquina)
-    serviceAccount = require('./firebase-service-account.json');
-}
+try {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } else {
+        // Fallback para desenvolvimento local (se tiver o ficheiro na máquina)
+        serviceAccount = require('./firebase-service-account.json');
+    }
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+} catch (error) {
+    console.error('Erro ao inicializar o Firebase Admin:', error);
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -52,15 +56,15 @@ async function enviarAvisoTelegram(texto) {
 
 // Função para disparar a notificação push via Firebase para todos os celulares
 async function dispararNotificacaoAgradecimento() {
-    const message = {
-        notification: {
-            title: "🙏 Valeu pela força!",
-            body: "Muito obrigado a todos que participaram hoje! Almoço garantido 🍔"
-        },
-        topic: "aomosso_geral"
-    };
-
     try {
+        const message = {
+            notification: {
+                title: "🙏 Valeu pela força!",
+                body: "Muito obrigado a todos que participaram hoje! Almoço garantido 🍔"
+            },
+            topic: "aomosso_geral"
+        };
+
         await admin.messaging().send(message);
         console.log("Notificação de agradecimento enviada via Firebase com sucesso!");
     } catch (error) {
@@ -68,60 +72,73 @@ async function dispararNotificacaoAgradecimento() {
     }
 }
 
-// Configura o servidor para ler arquivos soltos na raiz
+// Configura o servidor para ler arquivos estáticos na raiz
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 // Rota POST: O Widget do Android chama este endpoint
 app.post('/api/votar-sim', (req, res) => {
-    contSim++;
-    enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via widget)!* \n🎉 Alguém votou pelo widget que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
-
-    // Atualiza todos os navegadores abertos no site em tempo real via Socket.IO
-    io.emit('nova-resposta', 'SIM');
-    io.emit('atualizar-placar', { sim: contSim, nao: contNao });
-
-    console.log(`Voto via Widget contabilizado! Total SIM: ${contSim}`);
-    res.status(200).json({ success: true, total: contSim });
-});
-
-// Rota POST: Para disparar o agradecimento manualmente por API/Webhook
-app.get('/api/agradecer', async (req, res) => {
-    await dispararNotificacaoAgradecimento();
-    enviarAvisoTelegram("🙏 *Agradecimento enviado!* \nO alerta de agradecimento foi disparado para todos os aplicativos.");
-    res.status(200).json({ success: true, message: "Agradecimento disparado!" });
-});
-
-io.on('connection', (socket) => {
-  // Envia o placar atual imediatamente para quem acabou de se conectar/atualizar a página
-  socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
-
-  socket.on('resposta', (data) => {
-    if (data === 'SIM') {
+    try {
         contSim++;
-        enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
-    } else if (data === 'NAO') {
-        contNao++;
-        enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n❌ Uma alma corajosa conseguiu acertar os 10% de chance e negou o ao mosso! 🥲");
-    } else if (data.startsWith('HORARIO:')) {
-        const hora = data.replace('HORARIO:', '');
-        enviarAvisoTelegram(`⏰ *Sugestão de Horário:* Marcaram o compromisso oficial do ao mosso para às *${hora}*! ✨`);
-    }
+        enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via widget)!* \n🎉 Alguém votou pelo widget que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
 
-    // Transmite a nova resposta e o placar atualizado para TODOS os dispositivos conectados
-    io.emit('nova-resposta', data);
-    io.emit('atualizar-placar', { sim: contSim, nao: contNao });
-  });
+        // Atualiza todos os navegadores abertos no site em tempo real via Socket.IO
+        io.emit('nova-resposta', 'SIM');
+        io.emit('atualizar-placar', { sim: contSim, nao: contNao });
+
+        console.log(`Voto via Widget contabilizado! Total SIM: ${contSim}`);
+        return res.status(200).json({ success: true, total: contSim });
+    } catch (error) {
+        console.error("Erro ao processar voto do widget:", error);
+        return res.status(500).json({ success: false, error: "Erro interno no servidor" });
+    }
+});
+
+// Rota GET: Para disparar o agradecimento manualmente por API/Webhook
+app.get('/api/agradecer', async (req, res) => {
+    try {
+        await dispararNotificacaoAgradecimento();
+        enviarAvisoTelegram("🙏 *Agradecimento enviado!* \nO alerta de agradecimento foi disparado para todos os aplicativos.");
+        return res.status(200).json({ success: true, message: "Agradecimento disparado!" });
+    } catch (error) {
+        console.error("Erro na rota de agradecer:", error);
+        return res.status(500).json({ success: false, error: "Erro ao disparar agradecimento" });
+    }
+});
+
+// Gerenciamento de conexões via Socket.IO
+io.on('connection', (socket) => {
+    // Envia o placar atual imediatamente para quem acabou de se conectar/atualizar a página
+    socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
+
+    socket.on('resposta', (data) => {
+        if (!data) return;
+
+        if (data === 'SIM') {
+            contSim++;
+            enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
+        } else if (data === 'NAO') {
+            contNao++;
+            enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n❌ Uma alma corajosa conseguiu acertar os 10% de chance e negou o ao mosso! 🥲");
+        } else if (typeof data === 'string' && data.startsWith('HORARIO:')) {
+            const hora = data.replace('HORARIO:', '');
+            enviarAvisoTelegram(`⏰ *Sugestão de Horário:* Marcaram o compromisso oficial do ao mosso para às *${hora}*! ✨`);
+        }
+
+        // Transmite a nova resposta e o placar atualizado para TODOS os dispositivos conectados
+        io.emit('nova-resposta', data);
+        io.emit('atualizar-placar', { sim: contSim, nao: contNao });
+    });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
