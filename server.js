@@ -3,6 +3,14 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fetch = require('node-fetch');
+const admin = require('firebase-admin');
+
+// Inicializa o Firebase Admin usando as variáveis de ambiente ou o ficheiro de credenciais
+// Dica: No Render, pode configurar as credenciais como variável de ambiente ou enviar o ficheiro JSON
+const serviceAccount = require('./firebase-service-account.json'); 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -37,6 +45,24 @@ async function enviarAvisoTelegram(texto) {
     }
 }
 
+// Função para disparar a notificação push via Firebase para todos os celulares
+async function dispararNotificacaoAgradecimento() {
+    const message = {
+        notification: {
+            title: "🙏 Valeu pela força!",
+            body: "Muito obrigado a todos que participaram hoje! Almoço garantido 🍔"
+        },
+        topic: "aomosso_geral"
+    };
+
+    try {
+        await admin.messaging().send(message);
+        console.log("Notificação de agradecimento enviada via Firebase com sucesso!");
+    } catch (error) {
+        console.error("Erro ao enviar notificação push:", error);
+    }
+}
+
 // Configura o servidor para ler arquivos soltos na raiz
 app.use(express.static(__dirname));
 
@@ -61,6 +87,13 @@ app.post('/api/votar-sim', (req, res) => {
     res.status(200).json({ success: true, total: contSim });
 });
 
+// NOVA ROTA POST: Para disparar o agradecimento manualmente se preferir acionar por API/Webhook
+app.post('/api/agradecer', async (req, res) => {
+    await dispararNotificacaoAgradecimento();
+    enviarAvisoTelegram("🙏 *Agradecimento enviado!* \nO alerta de agradecimento foi disparado para todos os aplicativos.");
+    res.status(200).json({ success: true, message: "Agradecimento disparado!" });
+});
+
 io.on('connection', (socket) => {
   // Envia o placar atual imediatamente para quem acabou de se conectar/atualizar a página
   socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
@@ -70,6 +103,9 @@ io.on('connection', (socket) => {
     if (data === 'SIM') {
         contSim++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
+        
+        // Exemplo: Se quiser disparar a notificação automática ou deixar totalmente manual, 
+        // pode chamar dispararNotificacaoAgradecimento() aqui se preferir automatizar no futuro.
     } else if (data === 'NAO') {
         contNao++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n❌ Uma alma corajosa conseguiu acertar os 10% de chance e negou o ao mosso! 🥲");
