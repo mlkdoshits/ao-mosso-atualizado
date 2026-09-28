@@ -93,7 +93,7 @@ app.post('/api/votar-sim', (req, res) => {
 });
 
 // Rota POST: Para disparar o agradecimento manualmente por API/Webhook
-app.post('/api/agradecer', async (req, res) => {
+app.get('/api/agradecer', async (req, res) => {
     await dispararNotificacaoAgradecimento();
     enviarAvisoTelegram("🙏 *Agradecimento enviado!* \nO alerta de agradecimento foi disparado para todos os aplicativos.");
     res.status(200).json({ success: true, message: "Agradecimento disparado!" });
