@@ -2,7 +2,6 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const fetch = require('node-fetch');
 const admin = require('firebase-admin');
 
 // Inicializa o Firebase Admin usando a variável de ambiente segura configurada no Render
@@ -33,7 +32,7 @@ const TELEGRAM_CHAT_ID = '8524528778';
 let contSim = 0;
 let contNao = 0;
 
-// Função para enviar avisos no Telegram
+// Função para enviar avisos no Telegram (usando o fetch nativo do Node.js)
 async function enviarAvisoTelegram(texto) {
     try {
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -80,7 +79,7 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// NOVA ROTA POST: O Widget do Android vai chamar este endpoint!
+// Rota POST: O Widget do Android chama este endpoint
 app.post('/api/votar-sim', (req, res) => {
     contSim++;
     enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via widget)!* \n🎉 Alguém votou pelo widget que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
@@ -93,7 +92,7 @@ app.post('/api/votar-sim', (req, res) => {
     res.status(200).json({ success: true, total: contSim });
 });
 
-// NOVA ROTA POST: Para disparar o agradecimento manualmente se preferir acionar por API/Webhook
+// Rota POST: Para disparar o agradecimento manualmente por API/Webhook
 app.post('/api/agradecer', async (req, res) => {
     await dispararNotificacaoAgradecimento();
     enviarAvisoTelegram("🙏 *Agradecimento enviado!* \nO alerta de agradecimento foi disparado para todos os aplicativos.");
@@ -105,7 +104,6 @@ io.on('connection', (socket) => {
   socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
 
   socket.on('resposta', (data) => {
-    // Atualiza os contadores no servidor baseando-se na resposta
     if (data === 'SIM') {
         contSim++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso!* \n🎉 Alguém votou que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
