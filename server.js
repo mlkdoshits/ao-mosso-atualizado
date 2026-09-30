@@ -59,8 +59,8 @@ async function dispararNotificacaoAgradecimento() {
     try {
         const message = {
             notification: {
-            title: "Qvs, esqueceu dus guri?",
-            body: "Libera o ao mosso aí"
+            title: "Valeu pelo ao mosso, grande Arthur Navey! 🙏",
+            body: "Acabei de ver que vc liberou o ao mosso dus guri. 🍽️"
             },
             topic: "aomosso_geral"
         };
