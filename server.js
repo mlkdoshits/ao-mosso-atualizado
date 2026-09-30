@@ -54,21 +54,26 @@ async function enviarAvisoTelegram(texto) {
     }
 }
 
-// Função para disparar a notificação push via Firebase para todos os celulares com a nova mensagem
-async function dispararNotificacaoAgradecimento() {
+// Função modificada para aceitar título e mensagem personalizados
+async function dispararNotificacaoAgradecimento(tituloCustom, corpoCustom) {
     try {
+        const titulo = tituloCustom || "Valeu pelo ao mosso, grande Arthur Navey! 🙏";
+        const corpo = corpoCustom || "Acabei de ver que vc liberou o ao mosso dus guri. 🍽️";
+
         const message = {
             notification: {
-            title: "Valeu pelo ao mosso, grande Arthur Navey! 🙏",
-            body: "Acabei de ver que vc liberou o ao mosso dus guri. 🍽️"
+                title: titulo,
+                body: corpo
             },
             topic: "aomosso_geral"
         };
 
         await admin.messaging().send(message);
         console.log("Notificação de agradecimento enviada via Firebase com sucesso!");
+        return { titulo, corpo };
     } catch (error) {
         console.error("Erro ao enviar notificação push:", error);
+        throw error;
     }
 }
 
@@ -101,12 +106,21 @@ app.post('/api/votar-sim', (req, res) => {
     }
 });
 
-// Rota GET: Para disparar o agradecimento manualmente por API/Webhook
+// Rota GET personalizada: Permite mudar o título e a mensagem diretamente pelos parâmetros da URL
+// Exemplo de uso no navegador: https://ja-pode-ao-mossar.onrender.com/api/agradecer?title=MeuTitulo&body=MinhaMensagem
 app.get('/api/agradecer', async (req, res) => {
     try {
-        await dispararNotificacaoAgradecimento();
-        enviarAvisoTelegram("🙏 *Agradecimento enviado!* \nO alerta de agradecimento foi disparado para todos os aplicativos.");
-        return res.status(200).json({ success: true, message: "Agradecimento disparado!" });
+        const tituloParam = req.query.title;
+        const corpoParam = req.query.body;
+
+        const resultado = await dispararNotificacaoAgradecimento(tituloParam, corpoParam);
+        enviarAvisoTelegram(`🙏 *Agradecimento enviado!* \nTítulo: _${resultado.titulo}_\nMensagem: _${resultado.corpo}_`);
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: "Agradecimento disparado com sucesso!",
+            enviado: { title: resultado.titulo, body: resultado.corpo }
+        });
     } catch (error) {
         console.error("Erro na rota de agradecer:", error);
         return res.status(500).json({ success: false, error: "Erro ao disparar agradecimento" });
