@@ -1,3 +1,12 @@
+// Tratamento de erros globais para evitar que o servidor abaixo abruptamente
+process.on('uncaughtException', (err) => {
+    console.error('❌ Erro crítico não capturado (uncaughtException):', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Rejeição de promessa não tratada (unhandledRejection):', reason);
+});
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -80,6 +89,11 @@ async function dispararNotificacaoAgradecimento(tituloCustom, corpoCustom) {
 // Configura o servidor para ler arquivos estáticos na raiz
 app.use(express.static(__dirname));
 
+// Rota de Health Check / Ping (Ideal para o UptimeRobot)
+app.get('/ping', (req, res) => {
+    return res.status(200).send('OK');
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -94,7 +108,7 @@ app.post('/api/votar-sim', (req, res) => {
         contSim++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via widget)!* \n🎉 Alguém votou pelo widget que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
 
-        // Atualiza todos os navegadores abertos no site em tempo real via Socket.IO
+        // Atualiza todos los navegadores abertos no site em tempo real via Socket.IO
         io.emit('nova-resposta', 'SIM');
         io.emit('atualizar-placar', { sim: contSim, nao: contNao });
 
@@ -107,7 +121,6 @@ app.post('/api/votar-sim', (req, res) => {
 });
 
 // Rota GET personalizada: Permite mudar o título e a mensagem diretamente pelos parâmetros da URL
-// Exemplo de uso no navegador: https://ja-pode-ao-mossar.onrender.com/api/agradecer?title=MeuTitulo&body=MinhaMensagem
 app.get('/api/agradecer', async (req, res) => {
     try {
         const tituloParam = req.query.title;
@@ -129,7 +142,6 @@ app.get('/api/agradecer', async (req, res) => {
 
 // Gerenciamento de conexões via Socket.IO
 io.on('connection', (socket) => {
-    // Envia o placar atual imediatamente para quem acabou de se conectar/atualizar a página
     socket.emit('atualizar-placar', { sim: contSim, nao: contNao });
 
     socket.on('resposta', (data) => {
@@ -146,7 +158,6 @@ io.on('connection', (socket) => {
             enviarAvisoTelegram(`⏰ *Sugestão de Horário:* Marcaram o compromisso oficial do ao mosso para às *${hora}*! ✨`);
         }
 
-        // Transmite a nova resposta e o placar atualizado para TODOS os dispositivos conectados
         io.emit('nova-resposta', data);
         io.emit('atualizar-placar', { sim: contSim, nao: contNao });
     });
