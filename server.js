@@ -1,4 +1,4 @@
-// Tratamento de erros globais para evitar que o servidor abaixo abruptamente
+// Tratamento de erros globais para evitar que o servidor abaixe abruptamente
 process.on('uncaughtException', (err) => {
     console.error('❌ Erro crítico não capturado (uncaughtException):', err);
 });
@@ -13,21 +13,29 @@ const { Server } = require('socket.io');
 const path = require('path');
 const admin = require('firebase-admin');
 
-// Inicializa o Firebase Admin usando a variável de ambiente segura configurada no Render
+// Inicializa o Firebase Admin com tratamento robusto para o Render
 let serviceAccount;
 try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        let envData = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
+        // Remove aspas caso venham duplicadas do painel do Render
+        if (envData.startsWith('"') && envData.endsWith('"')) {
+            envData = envData.slice(1, -1);
+        }
+        serviceAccount = JSON.parse(envData);
     } else {
         // Fallback para desenvolvimento local (se tiver o ficheiro na máquina)
         serviceAccount = require('./firebase-service-account.json');
     }
 
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
+    if (!admin.apps.length) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        console.log("🔥 Firebase Admin inicializado com sucesso!");
+    }
 } catch (error) {
-    console.error('Erro ao inicializar o Firebase Admin:', error);
+    console.error('❌ Erro crítico ao inicializar o Firebase Admin:', error);
 }
 
 const app = express();
