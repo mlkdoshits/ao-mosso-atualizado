@@ -34,8 +34,8 @@
             statusDiv.innerText = 'A enviar...';
 
             try {
-                // Codifica o texto para ser enviado de forma segura pela URL
-                const url = `/api/agradecer?title=${encodeURIComponent(titulo)}&body=${encodeURIComponent(corpo)}`;
+                // CORREÇÃO: Apontando diretamente para o endpoint do Render
+                const url = `https://ao-mosso-atualizado.onrender.com/api/agradecer?title=${encodeURIComponent(titulo)}&body=${encodeURIComponent(corpo)}`;
                 
                 const response = await fetch(url);
                 const data = await response.json();
