@@ -32,7 +32,14 @@ try {
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+// CORREÇÃO: Adicionado CORS para aceitar conexões vindas da Vercel (ou de qualquer outro frontend)
+const io = new Server(server, {
+    cors: {
+        origin: "*", 
+        methods: ["GET", "POST"]
+    }
+});
 
 // IMPORTANTE: Necessário para o servidor ler o JSON enviado pelo Widget do Android
 app.use(express.json());
@@ -108,7 +115,7 @@ app.post('/api/votar-sim', (req, res) => {
         contSim++;
         enviarAvisoTelegram("🚨 *Alerta do Ao Mosso (via widget)!* \n🎉 Alguém votou pelo widget que **JÁ PODE AO MOSSAR!** 🍔🏃‍♂️");
 
-        // Atualiza todos los navegadores abertos no site em tempo real via Socket.IO
+        // Atualiza todos os navegadores abertos no site em tempo real via Socket.IO
         io.emit('nova-resposta', 'SIM');
         io.emit('atualizar-placar', { sim: contSim, nao: contNao });
 
