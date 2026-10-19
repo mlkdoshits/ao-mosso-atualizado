@@ -109,6 +109,14 @@ app.get('/ping', (req, res) => {
     return res.status(200).send('OK');
 });
 
+// NOVO: Rota para o Widget do Android ou apps consultarem o placar atual via HTTP GET
+app.get('/api/status', (req, res) => {
+    return res.status(200).json({
+        sim: contSim,
+        nao: contNao
+    });
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
