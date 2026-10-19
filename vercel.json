@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://ao-mosso-atualizado.onrender.com/api/:match*"
+    },
+    {
+      "source": "/socket.io/:match*",
+      "destination": "https://ao-mosso-atualizado.onrender.com/socket.io/:match*"
+    }
+  ]
+}
