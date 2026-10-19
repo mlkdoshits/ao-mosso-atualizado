@@ -16,7 +16,8 @@
     <meta name="twitter:description" content="Descubra se já está liberado o horário do ao mosso!">
     <meta name="twitter:image" content="https://ja-pode-ao-mossar.onrender.com/cachorro.png">
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- CORREÇÃO 1: Apontando o script do socket para o Render -->
+    <script src="https://ja-pode-ao-mossar.onrender.com/socket.io/socket.io.js"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; 
@@ -177,7 +178,9 @@
     </div>
 
     <script>
-        const socket = io();
+        // CORREÇÃO 2: Ligando o Socket.IO explicitamente ao endereço do Render
+        const socket = io("https://ja-pode-ao-mossar.onrender.com");
+        
         const btnSim = document.getElementById('btn-sim-clique');
         const btnNao = document.getElementById('btn-nao');
         const btnHora = document.getElementById('btn-hora-clique');
